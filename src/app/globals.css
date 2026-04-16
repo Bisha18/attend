@@ -1,25 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #FF2E93;
-  --color-primary-container: #FFD6E8;
-  --color-secondary: #00E6FF;
-  --color-secondary-container: #CCFAFF;
+  /* Purple as primary, Sky Blue as secondary, Yellow as accent */
+  --color-primary: #6D28D9;
+  --color-primary-container: #DDD6FE;
+  --color-secondary: #38BDF8;
+  --color-secondary-container: #E0F2FE;
   --color-tertiary: #FFEA00;
   --color-tertiary-container: #FFFACC;
-  --color-background: #F4F4F0;
+  --color-background: #F8F8F6;
   --color-surface: #FFFFFF;
-  --color-surface-container: #E8E8E8;
-  --color-surface-container-high: #D1D1D1;
+  --color-surface-container: #EBEBEB;
+  --color-surface-container-high: #D4D4D4;
   --color-surface-container-lowest: #FFFFFF;
   --color-on-background: #000000;
   --color-on-surface: #000000;
-  --color-on-surface-variant: #222222;
+  --color-on-surface-variant: #1a1a1a;
   --color-on-primary: #FFFFFF;
   --color-outline: #000000;
   --color-outline-variant: #000000;
-  --color-error: #FF0000;
-  --color-error-container: #FFD6D6;
+  --color-error: #DC2626;
+  --color-error-container: #FEE2E2;
   --color-on-error: #FFFFFF;
   --color-on-error-container: #000000;
 
@@ -35,8 +36,8 @@
 body {
   background: var(--color-background);
   color: var(--color-on-surface);
-  background-image: radial-gradient(#000000 1px, transparent 0);
-  background-size: 24px 24px;
+  background-image: radial-gradient(#00000018 1px, transparent 0);
+  background-size: 20px 20px;
 }
 
 .material-symbols-outlined {
@@ -99,5 +100,5 @@ body {
 }
 
 .neo-input {
-  @apply w-full bg-surface border-4 border-black px-4 py-3 text-black font-bold focus:outline-none focus:ring-0 focus:scale-[1.01] transition-transform placeholder-black/50;
+  @apply w-full bg-surface border-4 border-black px-4 py-3 text-black font-bold focus:outline-none focus:ring-0 focus:scale-[1.01] transition-transform placeholder-black/40;
 }

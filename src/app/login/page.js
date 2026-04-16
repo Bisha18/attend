@@ -46,7 +46,7 @@ export default function LoginRegister() {
   };
 
   return (
-    <main className="w-full min-h-screen flex flex-col items-center justify-center p-6 relative gap-8 z-10 overflow-hidden">
+    <main className="w-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative gap-6 sm:gap-8 z-10 overflow-hidden">
       {/* Go Home Button */}
       <Link href="/" className="absolute top-6 left-6 neo-btn bg-tertiary text-black flex gap-2 z-20">
         <span className="material-symbols-outlined">arrow_back</span>
@@ -60,7 +60,7 @@ export default function LoginRegister() {
             location_on
           </span>
         </div>
-        <h1 className="text-6xl md:text-7xl font-black text-black uppercase tracking-tighter leading-none" style={{textShadow: "4px 4px 0px #FF2E93"}}>
+        <h1 className="text-6xl md:text-7xl font-black text-black uppercase tracking-tighter leading-none" style={{textShadow: "4px 4px 0px #6D28D9"}}>
           Attend<br/>sure
         </h1>
         <div className="bg-black text-white px-4 py-1.5 font-bold tracking-widest text-sm neo-shadow-sm mt-2 uppercase">
@@ -74,7 +74,7 @@ export default function LoginRegister() {
           <h2 className="text-3xl font-black text-black uppercase tracking-tight">
             {isLogin ? "System Access" : "Initialization"}
           </h2>
-          <p className="text-black font-bold mt-3 bg-secondary inline-block px-3 py-1 border-2 border-black">
+          <p className="text-black font-bold mt-3 bg-secondary inline-block px-3 py-1 border-2 border-black text-sm">
             {isLogin ? "Authenticate to proceed." : "Register operative."}
           </p>
         </header>
