@@ -8,12 +8,7 @@ import Link from "next/link";
 export default function LoginRegister() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "STUDENT",
-  });
+  const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "STUDENT" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -21,19 +16,13 @@ export default function LoginRegister() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
       const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
       const { data } = await axios.post(endpoint, formData);
-      
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
-      
-      if (data.role === "TEACHER") {
-        router.push("/teacher/start");
-      } else {
-        router.push("/student/dashboard");
-      }
+      if (data.role === "TEACHER") router.push("/teacher/start");
+      else router.push("/student/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "An error occurred");
     } finally {
@@ -41,153 +30,120 @@ export default function LoginRegister() {
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   return (
-    <main className="w-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative gap-6 sm:gap-8 z-10 overflow-hidden">
-      {/* Go Home Button */}
-      <Link href="/" className="absolute top-6 left-6 neo-btn bg-tertiary text-black flex gap-2 z-20">
-        <span className="material-symbols-outlined">arrow_back</span>
-        BACK
+    <main className="w-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative gap-6 sm:gap-8 z-10 overflow-hidden bg-background">
+
+      {/* Back button */}
+      <Link href="/" className="absolute top-4 left-4 sm:top-6 sm:left-6 neo-btn bg-tertiary text-on-surface text-xs sm:text-sm gap-2 z-20 py-2 px-3 sm:px-4">
+        <span className="material-symbols-outlined text-lg">arrow_back</span>
+        <span className="hidden sm:inline">Back</span>
       </Link>
 
-      <div className="flex flex-col items-center gap-4 text-center z-10 max-w-md w-full mt-16 md:mt-0">
-        {/* Logo Block */}
-        <div className="w-20 h-20 bg-tertiary neo-border neo-shadow-sm flex items-center justify-center mb-2">
-          <span className="material-symbols-outlined text-black text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-            location_on
-          </span>
+      {/* Brand */}
+      <div className="flex flex-col items-center gap-3 text-center z-10 max-w-md w-full mt-10 sm:mt-0">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary neo-border neo-shadow flex items-center justify-center mb-1">
+          <span className="material-symbols-outlined text-white text-4xl sm:text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
         </div>
-        <h1 className="text-6xl md:text-7xl font-black text-black uppercase tracking-tighter leading-none" style={{textShadow: "4px 4px 0px #6D28D9"}}>
-          Attend<br/>sure
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-on-surface uppercase tracking-tighter leading-none"
+          style={{ textShadow: "3px 3px 0px #6D28D9, 6px 6px 0px #38BDF8" }}>
+          Attend<br />sure
         </h1>
-        <div className="bg-black text-white px-4 py-1.5 font-bold tracking-widest text-sm neo-shadow-sm mt-2 uppercase">
-          Auth Portal
+        <div className="bg-primary text-white px-4 py-1.5 font-black tracking-widest text-xs sm:text-sm neo-shadow-sm uppercase">
+          {isLogin ? "System Access" : "Registration"}
         </div>
       </div>
 
       {/* Auth Card */}
-      <section className="w-full max-w-md bg-white neo-border neo-shadow-lg p-6 md:p-8 relative z-10 mb-8">
-        <header className="mb-8 border-b-4 border-black pb-4">
-          <h2 className="text-3xl font-black text-black uppercase tracking-tight">
-            {isLogin ? "System Access" : "Initialization"}
+      <section className="w-full max-w-md bg-white neo-border neo-shadow-lg p-5 sm:p-8 relative z-10 mb-4">
+        
+        <header className="mb-6 pb-4 border-b-[3px] border-primary">
+          <h2 className="text-2xl sm:text-3xl font-black text-on-surface uppercase tracking-tight">
+            {isLogin ? "Welcome Back" : "Create Account"}
           </h2>
-          <p className="text-black font-bold mt-3 bg-secondary inline-block px-3 py-1 border-2 border-black text-sm">
+          <p className="font-bold mt-2 bg-secondary-container neo-border-2 px-3 py-1 text-xs sm:text-sm inline-block text-on-surface">
             {isLogin ? "Authenticate to proceed." : "Register operative."}
           </p>
         </header>
 
         {error && (
-          <div className="mb-6 p-4 bg-primary text-white border-4 border-black font-bold uppercase transition-all shadow-[4px_4px_0px_#000]">
-            <span className="material-symbols-outlined align-middle mr-2">error</span>
-            {error}
+          <div className="mb-5 p-3 sm:p-4 bg-error-container neo-border font-bold text-sm flex items-start gap-2" style={{ boxShadow: "3px 3px 0px #DC2626" }}>
+            <span className="material-symbols-outlined text-error text-lg flex-shrink-0">error</span>
+            <span className="text-on-surface">{error}</span>
           </div>
         )}
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-5" onSubmit={handleSubmit}>
+
           {!isLogin && (
-            <div className="space-y-2">
-              <label className="block text-sm font-black uppercase tracking-wider text-black bg-tertiary border-2 border-black px-2 py-1 w-max mb-1" htmlFor="name">
-                Designation (Name)
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black uppercase tracking-wider text-on-surface bg-tertiary neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="name">
+                Full Name
               </label>
-              <input
-                className="neo-input"
-                id="name"
-                name="name"
-                placeholder="JOHN DOE"
-                type="text"
-                value={formData.name}
-                onChange={handleChange}
-                required={!isLogin}
-              />
+              <input className="neo-input" id="name" name="name" placeholder="John Doe" type="text" value={formData.name} onChange={handleChange} required={!isLogin} />
             </div>
           )}
 
-          <div className="space-y-2">
-            <label className="block text-sm font-black uppercase tracking-wider text-black bg-secondary border-2 border-black px-2 py-1 w-max mb-1" htmlFor="email">
-              Credentials (Email)
+          <div className="space-y-1.5">
+            <label className="block text-xs font-black uppercase tracking-wider text-on-surface bg-secondary neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="email">
+              Email
             </label>
-            <input
-              className="neo-input"
-              id="email"
-              name="email"
-              placeholder="NAME@COMPANY.COM"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
+            <input className="neo-input" id="email" name="email" placeholder="name@company.com" type="email" value={formData.email} onChange={handleChange} required />
           </div>
 
-          <div className="space-y-2">
-             <div className="flex justify-between items-center bg-black text-white px-3 py-1.5 mb-1 border-2 border-black">
-              <label className="text-sm font-black uppercase tracking-wider block" htmlFor="password">
-                Passkey
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <label className="block text-xs font-black uppercase tracking-wider text-white bg-primary neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="password">
+                Password
               </label>
               {isLogin && (
-                <a className="text-xs font-bold text-tertiary hover:underline uppercase" href="#">
-                  Reset?
-                </a>
+                <a className="text-xs font-bold text-primary hover:underline uppercase" href="#">Reset?</a>
               )}
             </div>
-            <input
-              className="neo-input"
-              id="password"
-              name="password"
-              placeholder="••••••••"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+            <input className="neo-input" id="password" name="password" placeholder="••••••••" type="password" value={formData.password} onChange={handleChange} required />
           </div>
 
           {!isLogin && (
-            <div className="space-y-2 mt-6 pt-6 border-t-4 border-dashed border-black">
-               <label className="block text-sm font-black uppercase tracking-wider text-white bg-primary inline-block px-3 py-1.5 border-2 border-black mb-2" htmlFor="role">
-                Operative Class
+            <div className="space-y-1.5 pt-4 border-t-[3px] border-dashed border-primary/40">
+              <label className="block text-xs font-black uppercase tracking-wider text-white bg-primary neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="role">
+                Role
               </label>
-              <select
-                className="neo-input cursor-pointer bg-surface font-bold text-black"
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value="STUDENT">Student (Standard)</option>
-                <option value="TEACHER">Teacher (Admin)</option>
+              <select className="neo-input cursor-pointer" id="role" name="role" value={formData.role} onChange={handleChange}>
+                <option value="STUDENT">Student</option>
+                <option value="TEACHER">Teacher</option>
               </select>
             </div>
           )}
 
           <button
-            className="w-full h-16 neo-btn bg-black text-white text-xl flex items-center justify-between group disabled:opacity-50 mt-8 hover:bg-zinc-800"
+            className="w-full h-14 sm:h-16 font-black text-base sm:text-lg uppercase tracking-wider flex items-center justify-between px-5 sm:px-6 group transition-all disabled:opacity-60"
+            style={{ background: "#6D28D9", color: "#fff", border: "3px solid #6D28D9", boxShadow: "5px 5px 0px #38BDF8" }}
             type="submit"
             disabled={loading}
+            onMouseEnter={e => e.currentTarget.style.boxShadow = "7px 7px 0px #38BDF8"}
+            onMouseLeave={e => e.currentTarget.style.boxShadow = "5px 5px 0px #38BDF8"}
           >
-             <span className="group-hover:translate-x-2 transition-transform">{loading ? "PROCESSING..." : (isLogin ? "INITIATE LOGIN" : "ESTABLISH ACCT.")}</span>
-            {!loading && <span className="material-symbols-outlined text-4xl">arrow_forward</span>}
+            <span>{loading ? "Processing..." : isLogin ? "Login" : "Create Account"}</span>
+            {!loading && <span className="material-symbols-outlined text-3xl group-hover:translate-x-2 transition-transform">arrow_forward</span>}
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t-4 border-black">
+        <div className="mt-6 pt-5 border-t-[3px] border-primary/20">
           <button
-            className="neo-btn bg-background text-black w-full text-sm"
+            className="w-full py-3 font-black uppercase text-xs sm:text-sm tracking-wide text-primary bg-primary-container neo-border neo-shadow-sm hover:neo-shadow transition-all"
             onClick={() => setIsLogin(!isLogin)}
             type="button"
           >
-            {isLogin ? "SWITCH TO REGISTRATION" : "SWITCH TO LOGIN"}
+            {isLogin ? "→ Create a new account" : "→ Already have an account? Login"}
           </button>
         </div>
       </section>
-      
-      {/* Decorative Blocks */}
-      <div className="absolute top-[20%] right-[10%] w-32 h-32 bg-secondary neo-border hidden lg:block -z-10 rotate-12"></div>
-      <div className="absolute bottom-[20%] left-[10%] w-40 h-40 bg-primary neo-border hidden lg:block -z-10 -rotate-6 rounded-full"></div>
-      <div className="absolute top-[60%] right-[5%] w-16 h-16 bg-tertiary neo-border hidden lg:block -z-10 rotate-45"></div>
-      
+
+      {/* Decorative Shapes */}
+      <div className="absolute top-[15%] right-[8%] w-20 h-20 sm:w-28 sm:h-28 bg-secondary neo-border hidden md:block -z-10 rotate-12 neo-shadow"></div>
+      <div className="absolute bottom-[15%] left-[8%] w-24 h-24 sm:w-36 sm:h-36 bg-primary-container neo-border hidden md:block -z-10 -rotate-6 rounded-full neo-shadow"></div>
+      <div className="absolute top-[55%] right-[4%] w-10 h-10 sm:w-14 sm:h-14 bg-tertiary neo-border hidden md:block -z-10 rotate-45 neo-shadow-sm"></div>
     </main>
   );
 }

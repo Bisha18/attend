@@ -12,9 +12,7 @@ export default function TeacherLayout({ children }) {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
-    if (!token || role !== "TEACHER") {
-      router.push("/");
-    }
+    if (!token || role !== "TEACHER") router.push("/");
   }, [router]);
 
   const handleLogout = () => {
@@ -32,53 +30,52 @@ export default function TeacherLayout({ children }) {
   return (
     <div className="flex h-screen overflow-hidden bg-background text-on-surface">
 
-      {/* ─── LEFT SIDEBAR ─────────────────────────────────────── */}
-      <aside className="hidden lg:flex flex-col w-72 bg-secondary border-r-4 border-black h-screen overflow-hidden">
+      {/* ── LEFT SIDEBAR ─────────────────────────────────── */}
+      <aside className="hidden lg:flex flex-col w-72 bg-white border-r-[3px] border-primary h-screen overflow-hidden" style={{ boxShadow: "3px 0 0 #38BDF8" }}>
 
-        {/* Brand Header */}
-        <div className="flex-shrink-0 px-6 py-6 border-b-4 border-black bg-black">
+        {/* Brand */}
+        <div className="flex-shrink-0 px-6 py-5 border-b-[3px] border-primary bg-primary" style={{ boxShadow: "0 3px 0 #38BDF8" }}>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-primary border-2 border-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>admin_panel_settings</span>
+            <div className="w-10 h-10 bg-white flex items-center justify-center neo-border-2 neo-shadow-sm">
+              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>admin_panel_settings</span>
             </div>
             <div>
-              <h1 className="text-xl font-black text-white uppercase tracking-tighter leading-none">Attendsure</h1>
-              <span className="text-[9px] font-black text-tertiary uppercase tracking-widest">Instructor Terminal</span>
+              <h1 className="text-lg font-black text-white uppercase tracking-tighter leading-none">Attendsure</h1>
+              <span className="text-[9px] font-black text-secondary uppercase tracking-widest">Instructor Terminal</span>
             </div>
           </div>
         </div>
 
-        {/* Nav Links */}
-        <div className="flex-shrink-0 px-4 pt-6 pb-2">
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-black/50 mb-3 px-2">Control Panel</p>
+        {/* Nav Label */}
+        <div className="flex-shrink-0 px-5 pt-5 pb-2">
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/50 mb-3 px-1">Control Panel</p>
           {navLinks.map((link) => {
             const isActive = pathname.startsWith(link.href);
             return (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`flex items-center gap-3 px-4 py-3 mb-2 border-2 border-black transition-all ${
+                className={`flex items-center gap-3 px-4 py-3 mb-2 neo-border transition-all ${
                   isActive
-                    ? "bg-tertiary text-black shadow-[3px_3px_0px_#000] font-black -translate-x-[2px] -translate-y-[2px]"
-                    : "bg-white/60 text-black hover:bg-white hover:shadow-[3px_3px_0px_#000] hover:-translate-x-[2px] hover:-translate-y-[2px] font-bold"
+                    ? "bg-primary text-white font-black"
+                    : "bg-surface-container text-on-surface hover:bg-primary-container font-bold"
                 }`}
+                style={isActive ? { boxShadow: "3px 3px 0px #38BDF8" } : { boxShadow: "2px 2px 0px #6D28D9" }}
               >
                 <span className="material-symbols-outlined text-xl" style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>{link.icon}</span>
                 <span className="text-sm uppercase tracking-wide">{link.name}</span>
-                {isActive && <span className="ml-auto w-2 h-2 bg-black rounded-full"></span>}
+                {isActive && <span className="ml-auto w-2 h-2 rounded-full bg-secondary"></span>}
               </Link>
             );
           })}
         </div>
 
-        {/* ── FILLER: expands to push bottom content down ──────── */}
+        {/* Filler */}
         <div className="flex-1 flex flex-col justify-between px-4 py-4 min-h-0">
-
-          {/* Session Monitor Block */}
-          <div className="bg-black border-2 border-black p-4 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(#fff 1px, transparent 0)", backgroundSize: "8px 8px" }}></div>
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 mb-3 relative z-10">// Session Monitor</p>
-            <div className="space-y-2 relative z-10">
+          {/* Session Monitor */}
+          <div className="neo-border bg-primary/5 p-4 relative overflow-hidden" style={{ boxShadow: "4px 4px 0px #38BDF8" }}>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary mb-3">// Session Monitor</p>
+            <div className="space-y-2.5">
               {[
                 { label: "Active Students", val: "--", w: "80%", color: "bg-tertiary" },
                 { label: "Uptime", val: "100%", w: "100%", color: "bg-secondary" },
@@ -86,101 +83,86 @@ export default function TeacherLayout({ children }) {
               ].map((row) => (
                 <div key={row.label}>
                   <div className="flex justify-between mb-1">
-                    <span className="text-[9px] font-bold text-white/60 uppercase">{row.label}</span>
-                    <span className="text-[9px] font-black text-white">{row.val}</span>
+                    <span className="text-[9px] font-bold text-on-surface/50 uppercase">{row.label}</span>
+                    <span className="text-[9px] font-black text-primary">{row.val}</span>
                   </div>
-                  <div className="h-1.5 bg-white/10 border border-white/20 w-full">
+                  <div className="h-1.5 bg-surface-container border border-primary/30 w-full">
                     <div className={`h-full ${row.color} animate-pulse`} style={{ width: row.w }}></div>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-2 mt-4 relative z-10">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-ping inline-block"></span>
-              <span className="text-[9px] font-bold text-green-400 uppercase">Session Secured</span>
+            <div className="flex items-center gap-2 mt-3">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-ping inline-block"></span>
+              <span className="text-[9px] font-bold text-green-600 uppercase">Session Secured</span>
             </div>
           </div>
 
-          {/* Decorative Neo Block */}
-          <div className="mt-4 border-4 border-dashed border-black/40 p-3 bg-white/30 relative overflow-hidden">
-            <span className="material-symbols-outlined text-[64px] absolute -right-3 -bottom-3 text-black/10" style={{ fontVariationSettings: "'FILL' 1" }}>security</span>
-            <p className="text-[9px] font-black uppercase text-black/40 tracking-widest">Admin Mode</p>
-            <p className="text-xs font-black text-black mt-1">Instructor access<br/>fully authorized.</p>
+          {/* Decorative card */}
+          <div className="mt-4 border-[3px] border-dashed border-primary/30 p-3 bg-secondary-container/30 relative overflow-hidden">
+            <span className="material-symbols-outlined text-[56px] absolute -right-2 -bottom-2 text-primary/10" style={{ fontVariationSettings: "'FILL' 1" }}>security</span>
+            <p className="text-[9px] font-black uppercase text-primary/40 tracking-widest">Admin Mode</p>
+            <p className="text-xs font-black text-on-surface mt-1">Instructor access<br />fully authorized.</p>
           </div>
-
         </div>
 
-        {/* ── PINNED BOTTOM: Clearance + Logout ────────────────── */}
-        <div className="flex-shrink-0 border-t-4 border-black">
-          <div className="bg-tertiary/40 border-b-2 border-black px-4 py-3 flex items-center gap-2">
+        {/* Pinned Bottom */}
+        <div className="flex-shrink-0 border-t-[3px] border-primary">
+          <div className="bg-secondary-container px-4 py-2.5 flex items-center gap-2 border-b-[2px] border-primary/30">
             <span className="w-2 h-2 rounded-full bg-green-500"></span>
-            <p className="text-[10px] font-black uppercase text-black tracking-wider">Admin Clearance: Active</p>
+            <p className="text-[10px] font-black uppercase text-primary tracking-wider">Admin Clearance: Active</p>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-6 py-4 bg-black text-white hover:bg-primary hover:text-white transition-colors group"
+            className="w-full flex items-center gap-3 px-6 py-4 bg-surface text-on-surface hover:bg-primary hover:text-white transition-all group border-none"
           >
-            <span className="material-symbols-outlined group-hover:rotate-12 transition-transform">logout</span>
-            <span className="font-black text-sm uppercase tracking-widest">Logout</span>
-            <span className="ml-auto material-symbols-outlined text-sm opacity-50">arrow_forward</span>
+            <span className="material-symbols-outlined text-primary group-hover:text-white group-hover:rotate-12 transition-all">logout</span>
+            <span className="font-black text-sm uppercase tracking-widest group-hover:text-white">Logout</span>
+            <span className="ml-auto material-symbols-outlined text-sm text-primary/40 group-hover:text-white/60">arrow_forward</span>
           </button>
         </div>
-
       </aside>
 
-      {/* ─── MAIN CONTENT (scrollable) ────────────────────────── */}
+      {/* ── MAIN CONTENT ─────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-
-        {/* Sticky Top Header */}
-        <header className="flex-shrink-0 sticky top-0 z-40 bg-tertiary border-b-4 border-black flex justify-between items-center px-6 h-20">
-          <div className="flex items-center gap-4 lg:hidden">
-            <span className="material-symbols-outlined text-black cursor-pointer">menu</span>
-            <span className="text-xl font-black tracking-tight text-black uppercase">Attendsure</span>
+        <header className="flex-shrink-0 sticky top-0 z-40 bg-white border-b-[3px] border-primary flex justify-between items-center px-4 sm:px-6 h-16 sm:h-20" style={{ boxShadow: "0 3px 0 #38BDF8" }}>
+          <div className="flex items-center gap-3 lg:hidden">
+            <span className="material-symbols-outlined text-primary cursor-pointer">menu</span>
+            <span className="text-lg font-black tracking-tight text-primary uppercase">Attendsure</span>
           </div>
-          <div className="hidden lg:flex items-center gap-3">
-            <div className="bg-black text-white px-3 py-1.5 font-bold text-sm uppercase flex items-center gap-2 border-2 border-black shadow-[2px_2px_0px_#000]">
-              <span className="material-symbols-outlined text-[14px] text-green-400">admin_panel_settings</span>
+          <div className="hidden lg:flex items-center gap-2">
+            <div className="bg-primary/10 text-primary px-3 py-1.5 font-bold text-xs uppercase flex items-center gap-2 neo-border neo-shadow-sm">
+              <span className="material-symbols-outlined text-[14px] text-green-600">admin_panel_settings</span>
               Admin Level
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-black text-black uppercase leading-tight">{user.name}</p>
-              <p className="text-[9px] font-bold text-black/70 uppercase tracking-widest">Instructor</p>
+              <p className="text-sm font-black text-on-surface uppercase leading-tight">{user.name}</p>
+              <p className="text-[9px] font-bold text-primary/60 uppercase tracking-widest">Instructor</p>
             </div>
-            <div className="w-12 h-12 bg-primary border-4 border-black flex items-center justify-center text-white font-black shadow-[3px_3px_0px_#000]">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary neo-border neo-shadow-sm flex items-center justify-center text-white font-black text-lg">
               T
             </div>
           </div>
         </header>
-
-        {/* Page content */}
-        <div className="flex-1 p-6">
-          {children}
-        </div>
-
+        <div className="flex-1 p-4 sm:p-6">{children}</div>
       </main>
 
-      {/* Mobile Bottom NavBar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white flex justify-around items-center h-20 px-6 border-t-4 border-black z-50">
+      {/* Mobile Bottom Nav */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white flex justify-around items-center h-16 px-4 border-t-[3px] border-primary z-50" style={{ boxShadow: "0 -3px 0 #38BDF8" }}>
         {navLinks.map((link) => {
           const isActive = pathname.startsWith(link.href);
           return (
-            <Link
-              key={link.name}
-              href={link.href}
-              className={`flex flex-col items-center gap-1 p-2 border-2 border-transparent transition-colors ${
-                isActive ? "text-primary border-black bg-secondary font-black shadow-[2px_2px_0px_#000]" : "text-black"
-              }`}
-            >
-              <span className="material-symbols-outlined" style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>{link.icon}</span>
-              <span className="text-[10px] font-black uppercase">{link.name}</span>
+            <Link key={link.name} href={link.href} className={`flex flex-col items-center gap-1 p-2 neo-border transition-all ${isActive ? "bg-primary text-white neo-shadow-sm" : "text-on-surface bg-transparent border-transparent"}`}>
+              <span className="material-symbols-outlined text-xl" style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>{link.icon}</span>
+              <span className="text-[9px] font-black uppercase">{link.name}</span>
             </Link>
           );
         })}
-        <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-black">
-          <span className="material-symbols-outlined">logout</span>
-          <span className="text-[10px] font-black uppercase">Exit</span>
+        <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-on-surface">
+          <span className="material-symbols-outlined text-xl text-primary">logout</span>
+          <span className="text-[9px] font-black uppercase">Exit</span>
         </button>
       </nav>
     </div>

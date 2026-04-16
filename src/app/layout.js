@@ -8,8 +8,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata = {
-  title: "Attendsure GPS",
-  description: "Enterprise Attendance Intelligence with Neobrutalism",
+  title: "Attendsure",
+  description: "Enterprise Attendance Intelligence",
 };
 
 export default function RootLayout({ children }) {
