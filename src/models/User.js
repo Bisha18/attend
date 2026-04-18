@@ -23,6 +23,17 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ['TEACHER', 'STUDENT'],
     default: 'STUDENT'
+  },
+  rfidUid: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  subject: {
+    type: String,
+  },
+  semester: {
+    type: String,
   }
 }, { timestamps: true });
 

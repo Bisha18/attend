@@ -23,6 +23,7 @@ export default function TeacherLayout({ children }) {
 
   const navLinks = [
     { name: "Live Map", href: "/teacher/start", icon: "map" },
+    { name: "Class Attendance", href: "/teacher/class-attendance", icon: "contactless" },
     { name: "Live Attendance", href: "/teacher/live", icon: "group" },
     { name: "Attendance Log", href: "/teacher/history", icon: "assignment_turned_in" },
   ];

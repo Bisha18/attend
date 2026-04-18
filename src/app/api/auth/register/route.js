@@ -8,7 +8,7 @@ export async function POST(request) {
   try {
     await dbConnect();
 
-    const { name, email, password, role } = await request.json();
+    const { name, email, password, role, subject, semester, uid } = await request.json();
 
     if (!name || !email || !password) {
       return NextResponse.json({ message: 'Please provide all required fields' }, { status: 400 });
@@ -28,6 +28,9 @@ export async function POST(request) {
       email,
       password: hashedPassword,
       role: role || 'STUDENT',
+      subject: subject || undefined,
+      semester: semester || undefined,
+      rfidUid: role === 'STUDENT' && uid ? uid : undefined,
     });
 
     const token = jwt.sign(

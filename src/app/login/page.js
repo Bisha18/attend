@@ -8,7 +8,7 @@ import Link from "next/link";
 export default function LoginRegister() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "STUDENT" });
+  const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "STUDENT", subject: "", semester: "", uid: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -56,7 +56,7 @@ export default function LoginRegister() {
       </div>
 
       {/* Auth Card */}
-      <section className="w-full max-w-md bg-white neo-border neo-shadow-lg p-5 sm:p-8 relative z-10 mb-4">
+      <section className="w-full max-w-md bg-white neo-border neo-shadow-lg p-5 sm:p-8 relative z-10 mb-4 h-full max-h-[85vh] overflow-y-auto">
         
         <header className="mb-6 pb-4 border-b-[3px] border-primary">
           <h2 className="text-2xl sm:text-3xl font-black text-on-surface uppercase tracking-tight">
@@ -77,6 +77,18 @@ export default function LoginRegister() {
         <form className="space-y-5" onSubmit={handleSubmit}>
 
           {!isLogin && (
+            <div className="space-y-1.5 pt-4 border-t-[3px] border-dashed border-primary/40">
+              <label className="block text-xs font-black uppercase tracking-wider text-white bg-primary neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="role">
+                Role
+              </label>
+              <select className="neo-input cursor-pointer" id="role" name="role" value={formData.role} onChange={handleChange}>
+                <option value="STUDENT">Student</option>
+                <option value="TEACHER">Teacher</option>
+              </select>
+            </div>
+          )}
+
+          {!isLogin && (
             <div className="space-y-1.5">
               <label className="block text-xs font-black uppercase tracking-wider text-on-surface bg-tertiary neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="name">
                 Full Name
@@ -91,6 +103,33 @@ export default function LoginRegister() {
             </label>
             <input className="neo-input" id="email" name="email" placeholder="name@company.com" type="email" value={formData.email} onChange={handleChange} required />
           </div>
+          
+          {!isLogin && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black uppercase tracking-wider text-on-surface bg-gray-200 neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="subject">
+                Subject
+              </label>
+              <input className="neo-input" id="subject" name="subject" placeholder="E.g. Computer Networks" type="text" value={formData.subject} onChange={handleChange} required={!isLogin} />
+            </div>
+          )}
+          
+          {!isLogin && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black uppercase tracking-wider text-on-surface bg-gray-200 neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="semester">
+                Semester
+              </label>
+              <input className="neo-input" id="semester" name="semester" placeholder="E.g. 6th" type="text" value={formData.semester} onChange={handleChange} required={!isLogin} />
+            </div>
+          )}
+          
+          {!isLogin && formData.role === 'STUDENT' && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black uppercase tracking-wider text-white bg-blue-500 neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="uid">
+                RFID UID
+              </label>
+              <input className="neo-input" id="uid" name="uid" placeholder="E.g. E37587FA" type="text" value={formData.uid} onChange={handleChange} required={!isLogin} />
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
@@ -103,18 +142,6 @@ export default function LoginRegister() {
             </div>
             <input className="neo-input" id="password" name="password" placeholder="••••••••" type="password" value={formData.password} onChange={handleChange} required />
           </div>
-
-          {!isLogin && (
-            <div className="space-y-1.5 pt-4 border-t-[3px] border-dashed border-primary/40">
-              <label className="block text-xs font-black uppercase tracking-wider text-white bg-primary neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="role">
-                Role
-              </label>
-              <select className="neo-input cursor-pointer" id="role" name="role" value={formData.role} onChange={handleChange}>
-                <option value="STUDENT">Student</option>
-                <option value="TEACHER">Teacher</option>
-              </select>
-            </div>
-          )}
 
           <button
             className="w-full h-14 sm:h-16 font-black text-base sm:text-lg uppercase tracking-wider flex items-center justify-between px-5 sm:px-6 group transition-all disabled:opacity-60"

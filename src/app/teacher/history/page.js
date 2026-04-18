@@ -68,7 +68,7 @@ export default function TeacherHistory() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b-[3px] border-primary bg-primary/5">
-                  {["Student Name", "Email", "Time Recorded", "Verification"].map(h => (
+                  {["Student Name", "Time", "Map Verification", "RFID Scanned", "Final Status"].map(h => (
                     <th key={h} className="py-3 px-4 text-[9px] font-black uppercase tracking-[0.2em] text-primary">{h}</th>
                   ))}
                 </tr>
@@ -76,14 +76,50 @@ export default function TeacherHistory() {
               <tbody>
                 {attendances.map((att, i) => (
                   <tr key={att._id} className={`border-b-[2px] border-primary/10 hover:bg-primary-container transition-colors ${i % 2 === 0 ? "" : "bg-surface-container/40"}`}>
-                    <td className="py-4 px-4 font-black text-sm text-on-surface">{att.studentId?.name || "Unknown"}</td>
-                    <td className="py-4 px-4 text-xs font-bold text-on-surface/60">{att.studentId?.email}</td>
+                    <td className="py-4 px-4 font-black text-sm text-on-surface">
+                      {att.studentId?.name || "Unknown"}
+                      <div className="text-[10px] font-bold text-on-surface/50 mt-0.5">{att.studentId?.email}</div>
+                    </td>
                     <td className="py-4 px-4 font-mono text-xs font-bold text-on-surface/60">{new Date(att.timestamp).toLocaleTimeString()}</td>
                     <td className="py-4 px-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 neo-border-2 text-green-700">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                        <span className="text-[9px] font-black uppercase tracking-widest">Present</span>
-                      </span>
+                      {att.mapStatus === 'Verified' ? (
+                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 neo-border-2 text-green-700">
+                           <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                           <span className="text-[9px] font-black uppercase tracking-widest">Verified</span>
+                         </span>
+                      ) : (
+                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 neo-border-2 text-red-700">
+                           <span className="text-[9px] font-black uppercase tracking-widest">Not Verified</span>
+                         </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-4">
+                      {att.rfidStatus === 'Scanned' ? (
+                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 neo-border-2 text-blue-700">
+                           <span className="text-[9px] font-black uppercase tracking-widest">Scanned</span>
+                         </span>
+                      ) : (
+                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-50 neo-border-2 text-gray-500">
+                           <span className="text-[9px] font-black uppercase tracking-widest">Not Scanned</span>
+                         </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-4">
+                      {att.finalStatus === 'Present' && (
+                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 neo-border-2 text-green-800">
+                           <span className="text-[10px] font-black uppercase tracking-widest">Present</span>
+                         </span>
+                      )}
+                      {att.finalStatus === 'Absent' && (
+                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-100 neo-border-2 text-red-800">
+                           <span className="text-[10px] font-black uppercase tracking-widest">Absent</span>
+                         </span>
+                      )}
+                      {att.finalStatus === 'Invalid' && (
+                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 neo-border-2 text-yellow-800">
+                           <span className="text-[10px] font-black uppercase tracking-widest">Invalid</span>
+                         </span>
+                      )}
                     </td>
                   </tr>
                 ))}
