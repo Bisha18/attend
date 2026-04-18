@@ -16,7 +16,7 @@ export default function ClassAttendance() {
       const token = localStorage.getItem("token");
       const { data } = await axios.get(`/api/attendance/class?date=${dateStr}`, { headers: { Authorization: `Bearer ${token}` } });
       setAttendances(data);
-    } catch { console.error("error fetching class attendance"); }
+    } catch (err) { console.error("error fetching class attendance"); }
     finally { setLoading(false); }
   };
 

@@ -43,14 +43,24 @@ export async function GET(request) {
     }).lean();
 
     // Mapping to track which students are already in the map check-ins
-    const mapStudentIds = new Set(mapAttendances.map(a => a.studentId._id.toString()));
+    const mapStudentIds = new Set(
+      mapAttendances.filter(a => a.studentId).map(a => a.studentId._id.toString())
+    );
 
     let mergedData = [];
 
     // Process map attendances
     for (const att of mapAttendances) {
       const student = att.studentId;
+      if (!student) continue;
+
       const hasRfid = student.rfidUid ? rfidUidsThisDate.includes(student.rfidUid) : false;
+      const hasSelfie = !!att.selfieUrl;
+      
+      let finalStatus = 'Invalid';
+      if (hasRfid && hasSelfie) finalStatus = 'Present';
+      else if (!hasRfid && hasSelfie) finalStatus = 'Invalid'; // Map + Selfie, no RFID. 
+      else if (hasRfid && !hasSelfie) finalStatus = 'Absent';  // Map + RFID, no Selfie.
       
       mergedData.push({
         _id: att._id,
@@ -59,7 +69,8 @@ export async function GET(request) {
         date: att.date,
         mapStatus: 'Verified',
         rfidStatus: hasRfid ? 'Scanned' : 'Not Scanned',
-        finalStatus: hasRfid ? 'Present' : 'Invalid' 
+        selfieUrl: att.selfieUrl || null,
+        finalStatus
       });
     }
 

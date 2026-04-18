@@ -20,6 +20,9 @@ const AttendanceSchema = new mongoose.Schema({
     enum: ['PRESENT', 'ABSENT'],
     default: 'PRESENT'
   },
+  selfieUrl: {
+    type: String
+  },
   timestamp: {
     type: Date,
     default: Date.now

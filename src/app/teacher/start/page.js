@@ -16,7 +16,7 @@ export default function TeacherStart() {
         const token = localStorage.getItem("token");
         const { data } = await axios.get("/api/session/active", { headers: { Authorization: `Bearer ${token}` } });
         setSessionInfo(data);
-      } catch { setSessionInfo(null); }
+      } catch (err) { setSessionInfo(null); }
     };
     checkActive();
   }, []);

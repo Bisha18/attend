@@ -7,6 +7,7 @@ export default function TeacherLive() {
   const [attendances, setAttendances] = useState([]);
   const [sessionInfo, setSessionInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedSelfie, setSelectedSelfie] = useState(null); // URL for modal
 
   useEffect(() => {
     const fetchLive = async () => {
@@ -17,14 +18,25 @@ export default function TeacherLive() {
         const date = new Date().toISOString().split("T")[0];
         const { data: att } = await axios.get(`/api/attendance?date=${date}&sessionId=${session._id}`, { headers: { Authorization: `Bearer ${token}` } });
         setAttendances(att);
-      } catch { /* no active session */ }
+      } catch (err) { /* no active session */ }
       finally { setLoading(false); }
     };
     fetchLive();
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto w-full pb-24 lg:pb-6">
+    <div className="max-w-7xl mx-auto w-full pb-24 lg:pb-6 relative z-0">
+      
+      {/* Selfie Modal */}
+      {selectedSelfie && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setSelectedSelfie(null)}>
+          <div className="bg-white p-2 neo-border max-w-lg w-full relative" onClick={e => e.stopPropagation()} style={{ boxShadow: "8px 8px 0px #38BDF8" }}>
+            <button className="absolute -top-4 -right-4 w-10 h-10 bg-error text-white neo-border-2 flex justify-center items-center font-black" onClick={() => setSelectedSelfie(null)}>X</button>
+            <div className="bg-tertiary px-3 py-2 text-on-surface font-black uppercase tracking-widest text-sm border-b-[3px] border-primary mb-2">Selfie Verification</div>
+            <img src={selectedSelfie} alt="Enlarged Selfie" className="w-full h-auto max-h-[70vh] object-contain bg-surface-container" />
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="mb-8 pb-6 border-b-[3px] border-primary flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -67,7 +79,7 @@ export default function TeacherLive() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b-[3px] border-primary bg-primary/5">
-                  {["Student Name", "Time", "Map Verification", "RFID Scanned", "Final Status"].map(h => (
+                  {["Student Name", "Time", "Map Verification", "RFID Scanned", "Selfie Proof", "Final Status"].map(h => (
                     <th key={h} className="py-3 px-4 text-[9px] font-black uppercase tracking-[0.2em] text-primary">{h}</th>
                   ))}
                 </tr>
@@ -101,6 +113,21 @@ export default function TeacherLive() {
                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-50 neo-border-2 text-gray-500">
                            <span className="text-[9px] font-black uppercase tracking-widest">Not Scanned</span>
                          </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-4">
+                      {att.selfieUrl ? (
+                         <button onClick={() => setSelectedSelfie(att.selfieUrl)} className="w-12 h-12 bg-surface-container neo-border p-1 group cursor-pointer hover:bg-primary transition-colors overflow-hidden">
+                           {!att.selfieUrl.startsWith('data:') ? (
+                             <img src={att.selfieUrl} alt="selfie" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                           ) : (
+                             <img src={att.selfieUrl} alt="selfie base64" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                           )}
+                         </button>
+                      ) : (
+                         <div className="w-12 h-12 bg-gray-100 flex items-center justify-center neo-border text-gray-400">
+                           <span className="material-symbols-outlined text-xl">no_photography</span>
+                         </div>
                       )}
                     </td>
                     <td className="py-4 px-4">
