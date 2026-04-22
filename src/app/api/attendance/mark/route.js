@@ -6,15 +6,6 @@ import { getUser, unauthorized } from '@/lib/auth';
 import { getDistance } from '@/lib/geo';
 import cloudinary from '@/lib/cloudinary';
 
-// Increase body size limit for this specific route
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-};
-
 export async function POST(request) {
   try {
     const user = getUser(request);
@@ -35,8 +26,8 @@ export async function POST(request) {
       return NextResponse.json({ message: 'Live selfie is required' }, { status: 400 });
     }
 
-    // Get active session
-    const session = await Session.findOne({ active: true });
+    // Use latest active session to avoid stale picks if multiple were left active.
+    const session = await Session.findOne({ active: true }).sort({ startTime: -1 });
     if (!session) {
       return NextResponse.json({ message: 'No active session found. Ask your teacher to start a session.' }, { status: 404 });
     }
@@ -86,6 +77,7 @@ export async function POST(request) {
       studentId: user.userId,
       sessionId: session._id,
       date,
+      subject: session.subject || '',
       status: 'PRESENT',
       selfieUrl
     });

@@ -6,17 +6,41 @@ import axios from "axios";
 export default function TeacherHistory() {
   const [attendances, setAttendances] = useState([]);
   const [dateStr, setDateStr] = useState(new Date().toISOString().split("T")[0]);
+  const [subjectFilter, setSubjectFilter] = useState("");
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedSelfie, setSelectedSelfie] = useState(null); // URL for modal
 
-  useEffect(() => { fetchHistory(); }, [dateStr]);
+  useEffect(() => { fetchHistory(); }, [dateStr, subjectFilter]);
+
+  // Fetch unique subjects from teacher's sessions
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const { data } = await axios.get("/api/session/subjects", { headers: { Authorization: `Bearer ${token}` } });
+        setSubjects(data);
+      } catch (err) {
+        // Fallback: extract from attendance data
+        console.error("Could not fetch subjects");
+      }
+    };
+    fetchSubjects();
+  }, []);
 
   const fetchHistory = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.get(`/api/attendance?date=${dateStr}`, { headers: { Authorization: `Bearer ${token}` } });
+      let url = `/api/attendance?date=${dateStr}`;
+      if (subjectFilter) url += `&subject=${encodeURIComponent(subjectFilter)}`;
+      const { data } = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
       setAttendances(data);
+      // Extract unique subjects from data as fallback for dropdown
+      if (subjects.length === 0) {
+        const subs = [...new Set(data.map(a => a.subject).filter(Boolean))];
+        if (subs.length > 0) setSubjects(subs);
+      }
     } catch (err) { console.error("error fetching history"); }
     finally { setLoading(false); }
   };
@@ -44,8 +68,8 @@ export default function TeacherHistory() {
         <p className="text-sm font-bold text-on-surface/50 uppercase tracking-widest ml-6">Detailed record of verified student presences</p>
       </div>
 
-      {/* Date Filter */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
+      {/* Date & Subject Filters */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 flex-wrap">
         <label className="text-[9px] font-black uppercase tracking-[0.2em] text-primary flex-shrink-0">Filter by Date:</label>
         <div className="relative">
           <input
@@ -56,6 +80,16 @@ export default function TeacherHistory() {
             style={{ minWidth: "180px" }}
           />
         </div>
+        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-primary flex-shrink-0 sm:ml-2">Subject:</label>
+        <select
+          value={subjectFilter}
+          onChange={(e) => setSubjectFilter(e.target.value)}
+          className="neo-input py-2 px-3 w-auto text-sm"
+          style={{ minWidth: "160px" }}
+        >
+          <option value="">All Subjects</option>
+          {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
         {!loading && (
           <div className="neo-border bg-primary/10 px-3 py-2 neo-shadow-sm">
             <span className="text-[9px] font-black uppercase tracking-widest text-primary">
@@ -80,7 +114,7 @@ export default function TeacherHistory() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b-[3px] border-primary bg-primary/5">
-                  {["Student Name", "Time", "Map Verification", "RFID Scanned", "Selfie Proof", "Final Status"].map(h => (
+                  {["Student Name", "Subject", "Time", "Map Verification", "RFID Scanned", "Selfie Proof", "Final Status"].map(h => (
                     <th key={h} className="py-3 px-4 text-[9px] font-black uppercase tracking-[0.2em] text-primary">{h}</th>
                   ))}
                 </tr>
@@ -91,6 +125,15 @@ export default function TeacherHistory() {
                     <td className="py-4 px-4 font-black text-sm text-on-surface">
                       {att.studentId?.name || "Unknown"}
                       <div className="text-[10px] font-bold text-on-surface/50 mt-0.5">{att.studentId?.email}</div>
+                    </td>
+                    <td className="py-4 px-4">
+                      {att.subject ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 neo-border-2 text-purple-700">
+                          <span className="text-[9px] font-black uppercase tracking-widest">{att.subject}</span>
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-bold text-on-surface/30 uppercase">N/A</span>
+                      )}
                     </td>
                     <td className="py-4 px-4 font-mono text-xs font-bold text-on-surface/60">{new Date(att.timestamp).toLocaleTimeString()}</td>
                     <td className="py-4 px-4">

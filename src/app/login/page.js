@@ -125,9 +125,9 @@ export default function LoginRegister() {
           {!isLogin && formData.role === 'STUDENT' && (
             <div className="space-y-1.5">
               <label className="block text-xs font-black uppercase tracking-wider text-white bg-blue-500 neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="uid">
-                RFID UID
+                RFID UID <span className="text-white/60">(Optional)</span>
               </label>
-              <input className="neo-input" id="uid" name="uid" placeholder="E.g. E37587FA" type="text" value={formData.uid} onChange={handleChange} required={!isLogin} />
+              <input className="neo-input" id="uid" name="uid" placeholder="E.g. E37587FA (leave blank if none)" type="text" value={formData.uid} onChange={handleChange} />
             </div>
           )}
 

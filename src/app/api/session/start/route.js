@@ -12,10 +12,26 @@ export async function POST(request) {
 
     await dbConnect();
     
-    const { latitude, longitude, radius } = await request.json();
+    const { latitude, longitude, radius, subject } = await request.json();
 
     if (latitude === undefined || longitude === undefined || radius === undefined) {
       return NextResponse.json({ message: 'Please provide latitude, longitude, and radius' }, { status: 400 });
+    }
+
+    if (!subject || !subject.trim()) {
+      return NextResponse.json({ message: 'Please provide a subject for this session' }, { status: 400 });
+    }
+
+    const latNum = Number(latitude);
+    const lngNum = Number(longitude);
+    const radiusNum = Number(radius);
+    if (
+      Number.isNaN(latNum) ||
+      Number.isNaN(lngNum) ||
+      Number.isNaN(radiusNum) ||
+      radiusNum <= 0
+    ) {
+      return NextResponse.json({ message: 'Invalid location payload' }, { status: 400 });
     }
 
     // Deactivate previous sessions for this teacher
@@ -23,9 +39,10 @@ export async function POST(request) {
 
     const session = await Session.create({
       teacherId: user.userId,
-      latitude,
-      longitude,
-      radius,
+      latitude: latNum,
+      longitude: lngNum,
+      radius: radiusNum,
+      subject: subject.trim(),
       active: true,
       startTime: new Date()
     });

@@ -18,13 +18,41 @@ export async function GET(request) {
       .populate('sessionId')
       .sort({ timestamp: -1 });
       
-    // Calculate stats
-    // Note: In real life, total classes would be based on all past sessions for the student's cohort.
-    // For this app, we'll calculate based on unique sessions in the DB or just their attendances + some default
+    // Calculate overall stats
     const totalSessions = await Session.countDocuments();
     const presentCount = attendances.filter(a => a.status === 'PRESENT').length;
-    // Assuming absent count is the diff
     const absentCount = totalSessions - presentCount;
+
+    // Calculate subject-wise stats
+    // Get all unique subjects from sessions
+    const allSessions = await Session.find({}).select('subject').lean();
+    const subjectSessionCounts = {};
+    allSessions.forEach(s => {
+      const sub = s.subject || 'Unknown';
+      subjectSessionCounts[sub] = (subjectSessionCounts[sub] || 0) + 1;
+    });
+
+    const subjectPresentCounts = {};
+    attendances.forEach(a => {
+      const sub = a.subject || a.sessionId?.subject || 'Unknown';
+      if (a.status === 'PRESENT') {
+        subjectPresentCounts[sub] = (subjectPresentCounts[sub] || 0) + 1;
+      }
+    });
+
+    const subjects = [...new Set([...Object.keys(subjectSessionCounts), ...Object.keys(subjectPresentCounts)])];
+    const subjectStats = subjects.map(sub => {
+      const total = subjectSessionCounts[sub] || 0;
+      const present = subjectPresentCounts[sub] || 0;
+      const absent = Math.max(0, total - present);
+      return {
+        subject: sub,
+        total,
+        present,
+        absent,
+        percentage: total > 0 ? Math.round((present / total) * 100) : 0
+      };
+    });
 
     return NextResponse.json({
         attendances,
@@ -33,7 +61,8 @@ export async function GET(request) {
             present: presentCount,
             absent: absentCount > 0 ? absentCount : 0,
             percentage: totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 0
-        }
+        },
+        subjectStats
     }, { status: 200 });
   } catch (error) {
     console.error('Get My Attendance Error:', error);

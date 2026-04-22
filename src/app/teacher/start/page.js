@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function TeacherStart() {
-  const [formData, setFormData] = useState({ latitude: "", longitude: "", radius: 50 });
+  const [formData, setFormData] = useState({ latitude: "", longitude: "", radius: 50, subject: "" });
   const [loadingLoc, setLoadingLoc] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [error, setError] = useState("");
@@ -37,6 +37,7 @@ export default function TeacherStart() {
       const token = localStorage.getItem("token");
       const { data } = await axios.post("/api/session/start", formData, { headers: { Authorization: `Bearer ${token}` } });
       setSessionInfo(data);
+      setFormData({ latitude: "", longitude: "", radius: 50, subject: "" });
       alert("Session Started Successfully!");
     } catch (err) { setError(err.response?.data?.message || "Server Error"); }
     finally { setLoadingSubmit(false); }
@@ -57,7 +58,7 @@ export default function TeacherStart() {
         <div className={`flex items-center gap-2 neo-border px-3 py-2 text-xs font-black uppercase tracking-widest w-max ${sessionInfo ? "bg-green-50 text-green-700" : "bg-surface-container text-on-surface/50"}`}
           style={{ boxShadow: sessionInfo ? "2px 2px 0px #6D28D9" : "2px 2px 0px #38BDF8" }}>
           <span className={`w-2 h-2 rounded-full ${sessionInfo ? "bg-green-500 animate-pulse" : "bg-on-surface/20"}`}></span>
-          {sessionInfo ? "Session Active" : "Session Inactive"}
+          {sessionInfo ? `Active — ${sessionInfo.subject || "No Subject"}` : "Session Inactive"}
         </div>
       </div>
 
@@ -97,6 +98,18 @@ export default function TeacherStart() {
                     />
                   </div>
                 ))}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-primary block">Subject</label>
+                <input
+                  className="neo-input"
+                  placeholder="e.g. Mathematics, Physics"
+                  type="text" required
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                />
+                <p className="text-[9px] text-on-surface/40 font-bold uppercase tracking-widest">Which class is this session for?</p>
               </div>
 
               <div className="space-y-1.5">

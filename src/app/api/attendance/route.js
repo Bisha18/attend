@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Attendance from '@/models/Attendance';
+import Session from '@/models/Session';
 import { getUser, unauthorized } from '@/lib/auth';
 
 import User from '@/models/User';
@@ -18,14 +19,30 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     let dateParam = searchParams.get('date');
     const sessionId = searchParams.get('sessionId');
+    const subjectParam = searchParams.get('subject');
     
     // Default to today if date not provided
     if (!dateParam) {
       dateParam = new Date().toISOString().split('T')[0];
     }
     
-    let query = { date: dateParam };
-    if (sessionId) query.sessionId = sessionId;
+    let sessionQuery = { teacherId: user.userId };
+    if (subjectParam) {
+      sessionQuery.subject = subjectParam;
+    }
+    const teacherSessions = await Session.find(sessionQuery).select('_id subject').lean();
+    const teacherSessionIds = teacherSessions.map((s) => s._id.toString());
+    // Build a map from sessionId to subject for quick lookup
+    const sessionSubjectMap = {};
+    teacherSessions.forEach(s => { sessionSubjectMap[s._id.toString()] = s.subject || ''; });
+
+    let query = { date: dateParam, sessionId: { $in: teacherSessionIds } };
+    if (sessionId) {
+      if (!teacherSessionIds.includes(sessionId)) {
+        return NextResponse.json({ message: 'Session does not belong to this teacher' }, { status: 403 });
+      }
+      query.sessionId = sessionId;
+    }
 
     // 1. Get map attendances
     const mapAttendances = await Attendance.find(query)
@@ -58,15 +75,15 @@ export async function GET(request) {
       const hasSelfie = !!att.selfieUrl;
       
       let finalStatus = 'Invalid';
-      if (hasRfid && hasSelfie) finalStatus = 'Present';
-      else if (!hasRfid && hasSelfie) finalStatus = 'Invalid'; // Map + Selfie, no RFID. 
-      else if (hasRfid && !hasSelfie) finalStatus = 'Absent';  // Map + RFID, no Selfie.
+      if (hasSelfie) finalStatus = 'Present'; // Map verified + Selfie = Present (RFID is optional bonus)
+      else if (hasRfid && !hasSelfie) finalStatus = 'Absent';  // RFID only, no selfie proof
       
       mergedData.push({
         _id: att._id,
         studentId: student,
         timestamp: att.timestamp,
         date: att.date,
+        subject: att.subject || sessionSubjectMap[att.sessionId?.toString()] || '',
         mapStatus: 'Verified',
         rfidStatus: hasRfid ? 'Scanned' : 'Not Scanned',
         selfieUrl: att.selfieUrl || null,

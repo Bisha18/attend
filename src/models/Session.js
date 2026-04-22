@@ -19,6 +19,11 @@ const SessionSchema = new mongoose.Schema({
     required: true,
     default: 50 // meters
   },
+  subject: {
+    type: String,
+    required: true,
+    trim: true
+  },
   active: {
     type: Boolean,
     default: true

@@ -12,8 +12,12 @@ export async function GET(request) {
 
     await dbConnect();
     
-    // Get active session
-    const session = await Session.findOne({ active: true }).sort({ startTime: -1 });
+    // Teachers should see only their own active session.
+    // Students can read the latest active session.
+    const query = user.role === 'TEACHER'
+      ? { active: true, teacherId: user.userId }
+      : { active: true };
+    const session = await Session.findOne(query).sort({ startTime: -1 });
 
     if (!session) {
       return NextResponse.json({ message: 'No active session' }, { status: 404 });

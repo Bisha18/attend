@@ -50,7 +50,7 @@ export default function TeacherLive() {
         <div className={`flex items-center gap-2 neo-border px-3 py-2 text-xs font-black uppercase tracking-widest w-max ${sessionInfo ? "bg-green-50 text-green-700" : "bg-surface-container text-on-surface/50"}`}
           style={{ boxShadow: sessionInfo ? "2px 2px 0px #6D28D9" : "2px 2px 0px #38BDF8" }}>
           <span className={`w-2 h-2 rounded-full ${sessionInfo ? "bg-green-500 animate-pulse" : "bg-on-surface/20"}`}></span>
-          {sessionInfo ? "Session Live" : "No Active Session"}
+          {sessionInfo ? `Session Live — ${sessionInfo.subject || ''}` : "No Active Session"}
         </div>
       </div>
 
@@ -61,6 +61,12 @@ export default function TeacherLive() {
             <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>group</span>
             <span className="font-black text-sm uppercase tracking-widest">{attendances.length} Checked In</span>
           </div>
+          {sessionInfo?.subject && (
+            <div className="neo-border bg-secondary-container px-4 py-2 neo-shadow-sm flex items-center gap-2">
+              <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>menu_book</span>
+              <span className="font-black text-sm uppercase tracking-widest text-primary">{sessionInfo.subject}</span>
+            </div>
+          )}
         </div>
       )}
 

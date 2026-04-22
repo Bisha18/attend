@@ -15,6 +15,10 @@ const AttendanceSchema = new mongoose.Schema({
     type: String, // format YYYY-MM-DD
     required: true
   },
+  subject: {
+    type: String,
+    default: ''
+  },
   status: {
     type: String,
     enum: ['PRESENT', 'ABSENT'],

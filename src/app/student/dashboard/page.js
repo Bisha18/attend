@@ -5,10 +5,11 @@ import axios from "axios";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
 export default function StudentDashboard() {
-  const [data, setData] = useState({ attendances: [], stats: { total: 0, present: 0, absent: 0, percentage: 0 } });
+  const [data, setData] = useState({ attendances: [], stats: { total: 0, present: 0, absent: 0, percentage: 0 }, subjectStats: [] });
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
   const [markMsg, setMarkMsg] = useState({ text: "", type: "" });
+  const [subjectTab, setSubjectTab] = useState("all");
 
   // Steps: idle | locating | camera | preview
   const [step, setStep] = useState("idle");
@@ -22,7 +23,7 @@ export default function StudentDashboard() {
   const videoRef = useCallback((node) => {
     if (node && streamRef.current) {
       node.srcObject = streamRef.current;
-      node.play().catch(e => console.warn("Autoplay blocked:", e));
+      node.play().catch(() => { /* Autoplay interrupted — benign race condition */ });
     }
   }, []);
 
@@ -378,15 +379,73 @@ export default function StudentDashboard() {
               <span className="text-xl font-black text-primary">{data.stats.percentage}%</span>
             </div>
           </div>
+
+          {/* Subject-wise Breakdown Card */}
+          {data.subjectStats && data.subjectStats.length > 0 && (
+            <div className="bg-white neo-border p-6 sm:p-8" style={{ boxShadow: "6px 6px 0px #38BDF8" }}>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-2 h-6 bg-tertiary border-[2px] border-primary"></div>
+                <h3 className="font-black text-base uppercase tracking-wide">Subject-wise Stats</h3>
+              </div>
+              <div className="space-y-3">
+                {data.subjectStats.map((ss) => {
+                  const pctColor = ss.percentage >= 75 ? "text-green-700 bg-green-50" : ss.percentage >= 50 ? "text-yellow-700 bg-yellow-50" : "text-red-700 bg-red-50";
+                  return (
+                    <div key={ss.subject} className="neo-border p-4 bg-surface-container hover:bg-primary-container transition-colors" style={{ boxShadow: "2px 2px 0px #6D28D9" }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-black text-sm uppercase tracking-tight text-on-surface">{ss.subject}</span>
+                        <span className={`px-2 py-0.5 neo-border-2 font-black text-xs uppercase tracking-widest ${pctColor}`}>{ss.percentage}%</span>
+                      </div>
+                      <div className="flex gap-4 text-[9px] font-black uppercase tracking-widest text-on-surface/50">
+                        <span>Total: {ss.total}</span>
+                        <span className="text-green-600">Present: {ss.present}</span>
+                        <span className="text-red-600">Absent: {ss.absent}</span>
+                      </div>
+                      {/* Progress bar */}
+                      <div className="mt-2 h-2 neo-border-2 bg-surface-container overflow-hidden">
+                        <div className="h-full bg-primary transition-all" style={{ width: `${ss.percentage}%` }}></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Col: History */}
         <div className="xl:col-span-2">
           <div className="bg-white neo-border p-6 sm:p-8 h-full" style={{ boxShadow: "6px 6px 0px #38BDF8" }}>
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-4">
               <div className="w-2 h-6 bg-primary"></div>
               <h3 className="font-black text-base uppercase tracking-wide">Recent History</h3>
             </div>
+
+            {/* Subject Filter Tabs */}
+            {data.subjectStats && data.subjectStats.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-5">
+                <button
+                  onClick={() => setSubjectTab("all")}
+                  className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest neo-border-2 transition-colors ${
+                    subjectTab === "all" ? "bg-primary text-white" : "bg-surface-container text-on-surface/60 hover:bg-primary-container"
+                  }`}
+                >
+                  All
+                </button>
+                {data.subjectStats.map(ss => (
+                  <button
+                    key={ss.subject}
+                    onClick={() => setSubjectTab(ss.subject)}
+                    className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest neo-border-2 transition-colors ${
+                      subjectTab === ss.subject ? "bg-primary text-white" : "bg-surface-container text-on-surface/60 hover:bg-primary-container"
+                    }`}
+                  >
+                    {ss.subject}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {loading ? (
               <div className="text-center py-12 font-black text-on-surface/40 uppercase tracking-widest text-sm animate-pulse">Loading records...</div>
             ) : data.attendances.length === 0 ? (
@@ -397,22 +456,36 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {data.attendances.map((att) => (
-                  <div key={att._id} className="flex items-center justify-between p-4 neo-border bg-surface-container hover:bg-primary-container transition-colors" style={{ boxShadow: "2px 2px 0px #6D28D9" }}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-green-100 neo-border-2 flex items-center justify-center flex-shrink-0">
-                        <span className="material-symbols-outlined text-green-700 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                {data.attendances
+                  .filter(att => {
+                    if (subjectTab === "all") return true;
+                    const attSubject = att.subject || att.sessionId?.subject || '';
+                    return attSubject === subjectTab;
+                  })
+                  .map((att) => {
+                    const attSubject = att.subject || att.sessionId?.subject || '';
+                    return (
+                      <div key={att._id} className="flex items-center justify-between p-4 neo-border bg-surface-container hover:bg-primary-container transition-colors" style={{ boxShadow: "2px 2px 0px #6D28D9" }}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 bg-green-100 neo-border-2 flex items-center justify-center flex-shrink-0">
+                            <span className="material-symbols-outlined text-green-700 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                          </div>
+                          <div>
+                            <p className="font-black text-sm text-on-surface">{att.date}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-[10px] font-mono font-bold text-on-surface/40">{new Date(att.timestamp).toLocaleTimeString()}</p>
+                              {attSubject && (
+                                <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 font-black text-[8px] uppercase tracking-widest neo-border-2">{attSubject}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="px-3 py-1 bg-green-100 text-green-700 font-black text-[9px] uppercase tracking-widest neo-border-2">
+                          {att.status}
+                        </span>
                       </div>
-                      <div>
-                        <p className="font-black text-sm text-on-surface">{att.date}</p>
-                        <p className="text-[10px] font-mono font-bold text-on-surface/40">{new Date(att.timestamp).toLocaleTimeString()}</p>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 font-black text-[9px] uppercase tracking-widest neo-border-2">
-                      {att.status}
-                    </span>
-                  </div>
-                ))}
+                    );
+                  })}
               </div>
             )}
           </div>
