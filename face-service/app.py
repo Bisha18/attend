@@ -1,14 +1,3 @@
-"""
-Face Recognition Microservice — Minimal & Lightweight
-=====================================================
-Endpoints:
-  POST /register  — Register a student's face (base64 image from app camera)
-  POST /verify    — Verify a student's face against stored embedding (1:1)
-  GET  /health    — Health check
-
-Run:
-  uvicorn app:app --host 0.0.0.0 --port 8001 --reload
-"""
 
 import os
 import base64

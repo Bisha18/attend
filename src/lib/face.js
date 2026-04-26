@@ -2,7 +2,7 @@
  * Face verification helper — calls the Python face-service.
  */
 
-const FACE_SERVICE_URL = process.env.FACE_SERVICE_URL || 'http://localhost:8001';
+const FACE_SERVICE_URL = (process.env.FACE_SERVICE_URL || 'http://localhost:8001').replace(/\/+$/, '');
 
 /**
  * Verify a student's face against their registered embedding.

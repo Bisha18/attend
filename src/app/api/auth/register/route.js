@@ -35,7 +35,7 @@ export async function POST(request) {
 
     if (isStudent) {
       try {
-        const FACE_SERVICE_URL = process.env.FACE_SERVICE_URL || 'http://localhost:8001';
+        const FACE_SERVICE_URL = (process.env.FACE_SERVICE_URL || 'http://localhost:8001').replace(/\/+$/, '');
         const faceRes = await fetch(`${FACE_SERVICE_URL}/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
