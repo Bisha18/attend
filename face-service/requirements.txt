@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pymongo
+dnspython
+python-dotenv
+python-multipart
+deepface
+tf-keras
+httpx
+Pillow
