@@ -5,6 +5,6 @@ dnspython
 python-dotenv
 python-multipart
 deepface
-tf-keras
+tensorflow-cpu
 httpx
 Pillow

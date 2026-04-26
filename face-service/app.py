@@ -31,8 +31,8 @@ DeepFace = None
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DB_NAME = os.getenv("DB_NAME", "test")
-THRESHOLD = float(os.getenv("THRESHOLD", "0.55"))  # cosine distance threshold
-MODEL_NAME = "Facenet512"
+THRESHOLD = float(os.getenv("THRESHOLD", "0.40"))  # cosine distance threshold
+MODEL_NAME = "Facenet"  # Lighter model — fits in 512MB RAM (Render free tier)
 SELF_URL = os.getenv("SELF_URL", "")  # e.g. https://your-app.onrender.com
 KEEP_ALIVE_INTERVAL = int(os.getenv("KEEP_ALIVE_INTERVAL", "30"))  # seconds (30s)
 
