@@ -158,6 +158,16 @@ def cosine_distance(a: list, b: list) -> float:
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
 
+@app.post("/reset-embeddings")
+def reset_embeddings(secret: str = ""):
+    """Wipe all face embeddings (use after switching models). Protected by ADMIN_SECRET."""
+    admin_secret = os.getenv("ADMIN_SECRET", "attendsure-reset-2026")
+    if secret != admin_secret:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    result = faces_col.delete_many({})
+    log.info(f"🗑️ Cleared {result.deleted_count} face embeddings")
+    return {"success": True, "deleted": result.deleted_count}
+
 @app.get("/health")
 def health():
     """Quick health check."""
