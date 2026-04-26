@@ -137,6 +137,10 @@ def get_embedding(img_array: np.ndarray) -> list:
 
 def cosine_distance(a: list, b: list) -> float:
     """Cosine distance between two vectors. 0 = identical, 2 = opposite."""
+    if len(a) != len(b):
+        log.warning(f"Embedding dimension mismatch: {len(a)} vs {len(b)}. Treating as no match.")
+        return 2.0  # Max distance = completely different
+    
     a, b = np.array(a), np.array(b)
     dot = np.dot(a, b)
     norm = np.linalg.norm(a) * np.linalg.norm(b)
