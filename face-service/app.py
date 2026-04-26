@@ -24,7 +24,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pymongo import MongoClient
-from deepface import DeepFace
+# DeepFace is lazy-loaded to avoid blocking server startup with TensorFlow import
+DeepFace = None
 
 # ── Config ───────────────────────────────────────────────────────────────────
 load_dotenv()
@@ -70,15 +71,19 @@ app.add_middleware(
 def startup_event():
     # Pre-warm model in background so port binds immediately (Render requirement)
     def _prewarm():
-        log.info("Pre-warming DeepFace model (background)...")
+        global DeepFace
+        log.info("Loading DeepFace + TensorFlow (background)...")
         try:
+            from deepface import DeepFace as _DF
+            DeepFace = _DF
             dummy = np.zeros((224, 224, 3), dtype=np.uint8)
             DeepFace.represent(dummy, model_name=MODEL_NAME, detector_backend="opencv", enforce_detection=False)
-            log.info("✅ DeepFace model pre-warmed.")
+            log.info("✅ DeepFace model loaded and pre-warmed.")
         except Exception as e:
             log.warning(f"Pre-warm failed: {e}")
 
     threading.Thread(target=_prewarm, daemon=True).start()
+    log.info("⚡ Server ready — model loading in background...")
 
     # Start keep-alive background thread
     if SELF_URL:
@@ -116,6 +121,10 @@ def decode_base64_to_array(b64: str) -> np.ndarray:
 
 def get_embedding(img_array: np.ndarray) -> list:
     """Extract face embedding from image using DeepFace."""
+    global DeepFace
+    if DeepFace is None:
+        from deepface import DeepFace as _DF
+        DeepFace = _DF
     try:
         results = DeepFace.represent(
             img_path=img_array,
