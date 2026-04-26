@@ -68,14 +68,17 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup_event():
-    log.info("Pre-warming DeepFace model...")
-    try:
-        # Dummy image to trigger model download & load into memory
-        dummy = np.zeros((224, 224, 3), dtype=np.uint8)
-        DeepFace.represent(dummy, model_name=MODEL_NAME, detector_backend="opencv", enforce_detection=False)
-        log.info("✅ DeepFace model pre-warmed.")
-    except Exception as e:
-        log.warning(f"Pre-warm failed: {e}")
+    # Pre-warm model in background so port binds immediately (Render requirement)
+    def _prewarm():
+        log.info("Pre-warming DeepFace model (background)...")
+        try:
+            dummy = np.zeros((224, 224, 3), dtype=np.uint8)
+            DeepFace.represent(dummy, model_name=MODEL_NAME, detector_backend="opencv", enforce_detection=False)
+            log.info("✅ DeepFace model pre-warmed.")
+        except Exception as e:
+            log.warning(f"Pre-warm failed: {e}")
+
+    threading.Thread(target=_prewarm, daemon=True).start()
 
     # Start keep-alive background thread
     if SELF_URL:
