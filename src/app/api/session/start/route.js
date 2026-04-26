@@ -12,10 +12,14 @@ export async function POST(request) {
 
     await dbConnect();
     
-    const { latitude, longitude, radius, subject } = await request.json();
+    const { latitude, longitude, radius, branch, subject } = await request.json();
 
     if (latitude === undefined || longitude === undefined || radius === undefined) {
       return NextResponse.json({ message: 'Please provide latitude, longitude, and radius' }, { status: 400 });
+    }
+
+    if (!branch || !branch.trim()) {
+      return NextResponse.json({ message: 'Please provide a branch for this session' }, { status: 400 });
     }
 
     if (!subject || !subject.trim()) {
@@ -42,6 +46,7 @@ export async function POST(request) {
       latitude: latNum,
       longitude: lngNum,
       radius: radiusNum,
+      branch: branch.trim(),
       subject: subject.trim(),
       active: true,
       startTime: new Date()

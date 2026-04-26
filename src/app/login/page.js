@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
@@ -8,17 +8,85 @@ import Link from "next/link";
 export default function LoginRegister() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "STUDENT", subject: "", semester: "", uid: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "STUDENT", branch: "", semester: "", uid: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Camera State for Face Registration
+  const [step, setStep] = useState("idle"); // idle | camera | preview
+  const [photoPayload, setPhotoPayload] = useState(null);
+  const streamRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  const videoRef = useCallback((node) => {
+    if (node && streamRef.current) {
+      node.srcObject = streamRef.current;
+      node.play().catch(() => {});
+    }
+  }, []);
+
+  const stopStream = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+  };
+
+  const openCamera = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError("Camera not available.");
+      return;
+    }
+    try {
+      stopStream();
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+      streamRef.current = stream;
+      setStep("camera");
+      setError("");
+    } catch (err) {
+      setError("Camera error: " + err.message);
+    }
+  };
+
+  const capturePhoto = () => {
+    const canvas = canvasRef.current;
+    const videoEl = document.getElementById("register-selfie-video");
+    if (!videoEl || !canvas || videoEl.videoWidth === 0) {
+      setError("Camera not ready.");
+      return;
+    }
+    const maxW = 640;
+    const scale = Math.min(1, maxW / videoEl.videoWidth);
+    canvas.width = Math.floor(videoEl.videoWidth * scale);
+    canvas.height = Math.floor(videoEl.videoHeight * scale);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+    setPhotoPayload(canvas.toDataURL("image/jpeg", 0.7));
+    stopStream();
+    setStep("preview");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!isLogin && formData.role === "STUDENT" && !photoPayload) {
+      setError("Please capture your face for registration.");
+      return;
+    }
+
     setLoading(true);
     try {
       const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
-      const { data } = await axios.post(endpoint, formData);
+      const payload = isLogin ? formData : { ...formData, selfieBase64: photoPayload };
+      const { data } = await axios.post(endpoint, payload);
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
       if (data.role === "TEACHER") router.push("/teacher/start");
@@ -106,10 +174,10 @@ export default function LoginRegister() {
           
           {!isLogin && (
             <div className="space-y-1.5">
-              <label className="block text-xs font-black uppercase tracking-wider text-on-surface bg-gray-200 neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="subject">
-                Subject
+              <label className="block text-xs font-black uppercase tracking-wider text-on-surface bg-gray-200 neo-border-2 neo-shadow-sm px-2 py-0.5 w-max" htmlFor="branch">
+                Branch
               </label>
-              <input className="neo-input" id="subject" name="subject" placeholder="E.g. Computer Networks" type="text" value={formData.subject} onChange={handleChange} required={!isLogin} />
+              <input className="neo-input" id="branch" name="branch" placeholder="E.g. Computer Science" type="text" value={formData.branch} onChange={handleChange} required={!isLogin} />
             </div>
           )}
           
@@ -128,6 +196,44 @@ export default function LoginRegister() {
                 RFID UID <span className="text-white/60">(Optional)</span>
               </label>
               <input className="neo-input" id="uid" name="uid" placeholder="E.g. E37587FA (leave blank if none)" type="text" value={formData.uid} onChange={handleChange} />
+            </div>
+          )}
+
+          {!isLogin && formData.role === 'STUDENT' && (
+            <div className="space-y-3 pt-4 border-t-[3px] border-dashed border-primary/40">
+              <label className="block text-xs font-black uppercase tracking-wider text-white bg-amber-500 neo-border-2 neo-shadow-sm px-2 py-0.5 w-max">
+                Face Registration *
+              </label>
+              
+              {step === "idle" && (
+                <button type="button" onClick={openCamera} className="w-full py-3 font-black text-sm uppercase tracking-widest text-black flex justify-center items-center gap-2 neo-border transition-all bg-amber-400 border-2">
+                  <span className="material-symbols-outlined">camera_front</span>
+                  Open Camera
+                </button>
+              )}
+
+              {step === "camera" && (
+                <div className="flex flex-col gap-2">
+                  <video id="register-selfie-video" ref={videoRef} className="w-full neo-border bg-black" style={{ aspectRatio: "4/3", objectFit: "cover" }} muted playsInline autoPlay />
+                  <canvas ref={canvasRef} className="hidden" />
+                  <button type="button" onClick={capturePhoto} className="py-2 font-black text-sm uppercase tracking-widest text-white flex justify-center items-center gap-2 neo-border bg-blue-600">
+                    Capture Face
+                  </button>
+                  <button type="button" onClick={() => { stopStream(); setStep("idle"); }} className="py-2 text-xs font-bold text-red-600 uppercase neo-border bg-red-50">Cancel</button>
+                </div>
+              )}
+
+              {step === "preview" && photoPayload && (
+                <div className="flex flex-col gap-2">
+                  <div className="relative">
+                    <img src={photoPayload} alt="Face" className="w-full neo-border" style={{ aspectRatio: "4/3", objectFit: "cover" }} />
+                    <div className="absolute bottom-2 left-2 bg-green-600 text-white text-[9px] font-black uppercase tracking-widest px-2 py-1">✓ Captured</div>
+                  </div>
+                  <button type="button" onClick={() => { setPhotoPayload(null); setStep("idle"); }} className="py-2 text-xs font-bold text-primary uppercase bg-surface-container neo-border border-2">
+                    Retake Photo
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

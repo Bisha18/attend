@@ -5,6 +5,7 @@ import Attendance from '@/models/Attendance';
 import { getUser, unauthorized } from '@/lib/auth';
 import { getDistance } from '@/lib/geo';
 import cloudinary from '@/lib/cloudinary';
+import { verifyFace } from '@/lib/face';
 
 export async function POST(request) {
   try {
@@ -16,7 +17,7 @@ export async function POST(request) {
     await dbConnect();
 
     const body = await request.json();
-    const { latitude, longitude, selfieBase64 } = body;
+    const { latitude, longitude, selfieBase64, sessionId } = body;
 
     if (latitude === undefined || longitude === undefined) {
       return NextResponse.json({ message: 'Please provide GPS coordinates' }, { status: 400 });
@@ -26,10 +27,13 @@ export async function POST(request) {
       return NextResponse.json({ message: 'Live selfie is required' }, { status: 400 });
     }
 
-    // Use latest active session to avoid stale picks if multiple were left active.
-    const session = await Session.findOne({ active: true }).sort({ startTime: -1 });
-    if (!session) {
-      return NextResponse.json({ message: 'No active session found. Ask your teacher to start a session.' }, { status: 404 });
+    if (!sessionId) {
+      return NextResponse.json({ message: 'No session selected' }, { status: 400 });
+    }
+
+    const session = await Session.findById(sessionId);
+    if (!session || !session.active) {
+      return NextResponse.json({ message: 'Selected session is no longer active.' }, { status: 404 });
     }
 
     // Check distance
@@ -48,6 +52,30 @@ export async function POST(request) {
     });
     if (existing) {
       return NextResponse.json({ message: 'Attendance already marked for today' }, { status: 400 });
+    }
+
+    // ── Face Verification ──────────────────────────────────────────
+    // If the student has a registered face, verify the selfie against it.
+    // If it doesn't match, block the attendance.
+    let faceResult = null;
+    try {
+      faceResult = await verifyFace(user.userId, selfieBase64);
+      
+      if (faceResult && faceResult.verified === false) {
+        const msg = faceResult.message || '';
+        const isServiceError = msg.includes('unavailable');
+        const isNotRegistered = msg.includes('No registered face');
+
+        if (!isServiceError && !isNotRegistered) {
+          // Face did not match! Reject attendance.
+          return NextResponse.json({
+            message: `Biometric mismatch: ${msg || 'Face did not match registered profile'}`,
+            faceConfidence: faceResult.confidence,
+          }, { status: 403 });
+        }
+      }
+    } catch (faceError) {
+      console.warn('Face verification skipped (service unavailable):', faceError.message);
     }
 
     // Upload selfie
@@ -77,12 +105,22 @@ export async function POST(request) {
       studentId: user.userId,
       sessionId: session._id,
       date,
+      branch: session.branch || '',
       subject: session.subject || '',
       status: 'PRESENT',
-      selfieUrl
+      selfieUrl,
+      faceVerified: faceResult?.verified ?? null,
+      faceConfidence: faceResult?.confidence ?? null,
     });
 
-    return NextResponse.json({ message: 'Attendance marked successfully', attendance }, { status: 201 });
+    return NextResponse.json({
+      message: 'Attendance marked successfully',
+      attendance,
+      faceVerification: faceResult ? {
+        verified: faceResult.verified,
+        confidence: faceResult.confidence,
+      } : null,
+    }, { status: 201 });
 
   } catch (error) {
     if (error.code === 11000) {

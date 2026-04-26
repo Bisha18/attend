@@ -15,6 +15,10 @@ const AttendanceSchema = new mongoose.Schema({
     type: String, // format YYYY-MM-DD
     required: true
   },
+  branch: {
+    type: String,
+    default: ''
+  },
   subject: {
     type: String,
     default: ''
@@ -26,6 +30,14 @@ const AttendanceSchema = new mongoose.Schema({
   },
   selfieUrl: {
     type: String
+  },
+  faceVerified: {
+    type: Boolean,
+    default: null
+  },
+  faceConfidence: {
+    type: Number,
+    default: null
   },
   timestamp: {
     type: Date,

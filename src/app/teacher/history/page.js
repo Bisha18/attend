@@ -6,26 +6,26 @@ import axios from "axios";
 export default function TeacherHistory() {
   const [attendances, setAttendances] = useState([]);
   const [dateStr, setDateStr] = useState(new Date().toISOString().split("T")[0]);
-  const [subjectFilter, setSubjectFilter] = useState("");
-  const [subjects, setSubjects] = useState([]);
+  const [branchFilter, setBranchFilter] = useState("");
+  const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedSelfie, setSelectedSelfie] = useState(null); // URL for modal
 
-  useEffect(() => { fetchHistory(); }, [dateStr, subjectFilter]);
+  useEffect(() => { fetchHistory(); }, [dateStr, branchFilter]);
 
-  // Fetch unique subjects from teacher's sessions
+  // Fetch unique branches from teacher's sessions
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchBranches = async () => {
       try {
         const token = localStorage.getItem("token");
-        const { data } = await axios.get("/api/session/subjects", { headers: { Authorization: `Bearer ${token}` } });
-        setSubjects(data);
+        const { data } = await axios.get("/api/session/branches", { headers: { Authorization: `Bearer ${token}` } });
+        setBranches(data);
       } catch (err) {
         // Fallback: extract from attendance data
-        console.error("Could not fetch subjects");
+        console.error("Could not fetch branches:", err.response?.status, err.response?.data?.message || err.message);
       }
     };
-    fetchSubjects();
+    fetchBranches();
   }, []);
 
   const fetchHistory = async () => {
@@ -33,15 +33,15 @@ export default function TeacherHistory() {
     try {
       const token = localStorage.getItem("token");
       let url = `/api/attendance?date=${dateStr}`;
-      if (subjectFilter) url += `&subject=${encodeURIComponent(subjectFilter)}`;
+      if (branchFilter) url += `&branch=${encodeURIComponent(branchFilter)}`;
       const { data } = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
       setAttendances(data);
-      // Extract unique subjects from data as fallback for dropdown
-      if (subjects.length === 0) {
-        const subs = [...new Set(data.map(a => a.subject).filter(Boolean))];
-        if (subs.length > 0) setSubjects(subs);
+      // Extract unique branches from data as fallback for dropdown
+      if (branches.length === 0) {
+        const bs = [...new Set(data.map(a => a.branch).filter(Boolean))];
+        if (bs.length > 0) setBranches(bs);
       }
-    } catch (err) { console.error("error fetching history"); }
+    } catch (err) { console.error("error fetching history:", err.response?.status, err.response?.data?.message || err.message); }
     finally { setLoading(false); }
   };
 
@@ -80,15 +80,15 @@ export default function TeacherHistory() {
             style={{ minWidth: "180px" }}
           />
         </div>
-        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-primary flex-shrink-0 sm:ml-2">Subject:</label>
+        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-primary flex-shrink-0 sm:ml-2">Branch:</label>
         <select
-          value={subjectFilter}
-          onChange={(e) => setSubjectFilter(e.target.value)}
+          value={branchFilter}
+          onChange={(e) => setBranchFilter(e.target.value)}
           className="neo-input py-2 px-3 w-auto text-sm"
           style={{ minWidth: "160px" }}
         >
-          <option value="">All Subjects</option>
-          {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+          <option value="">All Branches</option>
+          {branches.map(b => <option key={b} value={b}>{b}</option>)}
         </select>
         {!loading && (
           <div className="neo-border bg-primary/10 px-3 py-2 neo-shadow-sm">
@@ -114,7 +114,7 @@ export default function TeacherHistory() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b-[3px] border-primary bg-primary/5">
-                  {["Student Name", "Subject", "Time", "Map Verification", "RFID Scanned", "Selfie Proof", "Final Status"].map(h => (
+                  {["Student Name", "Branch/Subject", "Time", "Map Verification", "RFID Scanned", "Selfie Proof", "Final Status"].map(h => (
                     <th key={h} className="py-3 px-4 text-[9px] font-black uppercase tracking-[0.2em] text-primary">{h}</th>
                   ))}
                 </tr>
@@ -127,10 +127,17 @@ export default function TeacherHistory() {
                       <div className="text-[10px] font-bold text-on-surface/50 mt-0.5">{att.studentId?.email}</div>
                     </td>
                     <td className="py-4 px-4">
-                      {att.subject ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 neo-border-2 text-purple-700">
-                          <span className="text-[9px] font-black uppercase tracking-widest">{att.subject}</span>
-                        </span>
+                      {att.branch ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 neo-border-2 text-purple-700 w-max">
+                            <span className="text-[9px] font-black uppercase tracking-widest">{att.branch}</span>
+                          </span>
+                          {att.subject && (
+                            <span className="text-[10px] font-bold text-on-surface/60 uppercase tracking-wide px-1">
+                              {att.subject}
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-[9px] font-bold text-on-surface/30 uppercase">N/A</span>
                       )}

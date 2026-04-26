@@ -85,8 +85,8 @@ export default function ClassAttendance() {
                       {att.studentId && <div className="text-[10px] font-bold text-on-surface/40 mt-1">{att.studentId.email}</div>}
                     </td>
                     <td className="py-4 px-4">
-                      {att.studentId?.subject ? (
-                         <div className="text-xs font-black uppercase tracking-wide text-on-surface/70 mb-0.5">{att.studentId.subject}</div>
+                      {att.studentId?.branch ? (
+                         <div className="text-xs font-black uppercase tracking-wide text-on-surface/70 mb-0.5">{att.studentId.branch}</div>
                       ) : <div className="text-xs font-bold text-on-surface/30 uppercase">Unregistered</div>}
                       {att.studentId?.semester && (
                          <div className="text-[9px] font-bold uppercase tracking-widest text-on-surface/40">Sem {att.studentId.semester}</div>

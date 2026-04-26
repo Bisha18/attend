@@ -19,6 +19,11 @@ const SessionSchema = new mongoose.Schema({
     required: true,
     default: 50 // meters
   },
+  branch: {
+    type: String,
+    required: true,
+    trim: true
+  },
   subject: {
     type: String,
     required: true,

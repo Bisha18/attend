@@ -29,7 +29,7 @@ const UserSchema = new mongoose.Schema({
     unique: true,
     sparse: true
   },
-  subject: {
+  branch: {
     type: String,
   },
   semester: {

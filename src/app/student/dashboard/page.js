@@ -9,9 +9,9 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
   const [markMsg, setMarkMsg] = useState({ text: "", type: "" });
-  const [subjectTab, setSubjectTab] = useState("all");
+  const [branchTab, setBranchTab] = useState("all");
 
-  // Steps: idle | locating | camera | preview
+  // Steps: idle | locating | camera | preview | register_camera | register_preview
   const [step, setStep] = useState("idle");
   const [photoPayload, setPhotoPayload] = useState(null);
   const [coords, setCoords] = useState(null);
@@ -27,11 +27,31 @@ export default function StudentDashboard() {
     }
   }, []);
 
+  const [faceRegistered, setFaceRegistered] = useState(false);
+  const [activeSessions, setActiveSessions] = useState([]);
+  const [selectedSessionId, setSelectedSessionId] = useState("");
+
   useEffect(() => {
     fetchData();
+    fetchActiveSession();
     // Cleanup: stop camera when component unmounts
     return () => stopStream();
   }, []);
+
+
+
+  const fetchActiveSession = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.get("/api/session/active", { headers: { Authorization: `Bearer ${token}` } });
+      setActiveSessions(Array.isArray(data) ? data : []);
+      if (Array.isArray(data) && data.length > 0) {
+        setSelectedSessionId(data[0]._id);
+      }
+    } catch (err) {
+      setActiveSessions([]);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -62,10 +82,9 @@ export default function StudentDashboard() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const token = localStorage.getItem("token");
-          const { data: session } = await axios.get("/api/session/active", {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          if (!selectedSessionId) throw new Error("No class selected.");
+          const session = activeSessions.find(s => s._id === selectedSessionId);
+          if (!session) throw new Error("Selected class is no longer active.");
 
           // Haversine distance
           const R = 6371e3;
@@ -102,7 +121,7 @@ export default function StudentDashboard() {
     );
   };
 
-  const openCamera = async () => {
+  const openCamera = async (targetStep = "camera") => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setMarkMsg({ text: "Camera not available. Please use https:// or localhost.", type: "error" });
       setStep("idle");
@@ -123,7 +142,7 @@ export default function StudentDashboard() {
       }
 
       streamRef.current = stream;
-      setStep("camera"); // This triggers the video element to mount, and the callback ref attaches the stream
+      setStep(targetStep); // This triggers the video element to mount, and the callback ref attaches the stream
 
     } catch (err) {
       console.error("Camera Error:", err.name, err.message);
@@ -138,7 +157,7 @@ export default function StudentDashboard() {
     }
   };
 
-  const capturePhoto = () => {
+  const capturePhoto = (isRegister = false) => {
     const canvas = canvasRef.current;
     // Get the active video element via the stream
     const videoEl = document.getElementById("selfie-video");
@@ -164,13 +183,13 @@ export default function StudentDashboard() {
     const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
     setPhotoPayload(dataUrl);
     stopStream();
-    setStep("preview");
+    setStep(isRegister ? "register_preview" : "preview");
   };
 
-  const retakePhoto = async () => {
+  const retakePhoto = async (isRegister = false) => {
     setPhotoPayload(null);
     setMarkMsg({ text: "", type: "" });
-    await openCamera();
+    await openCamera(isRegister ? "register_camera" : "camera");
   };
 
   const cancelCamera = () => {
@@ -193,7 +212,7 @@ export default function StudentDashboard() {
       const token = localStorage.getItem("token");
       await axios.post(
         "/api/attendance/mark",
-        { latitude: coords.lat, longitude: coords.lng, selfieBase64: photoPayload },
+        { latitude: coords.lat, longitude: coords.lng, selfieBase64: photoPayload, sessionId: selectedSessionId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -212,6 +231,38 @@ export default function StudentDashboard() {
         setMarkMsg({ text: msg || "Submission failed.", type: "error" });
         setStep("idle");
       }
+    } finally {
+      setMarking(false);
+    }
+  };
+
+  const submitFaceRegistration = async () => {
+    if (!photoPayload) {
+      setMarkMsg({ text: "Missing photo. Start over.", type: "error" });
+      setStep("idle");
+      return;
+    }
+
+    setMarking(true);
+    setMarkMsg({ text: "Registering face...", type: "info" });
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        "/api/face/register",
+        { selfieBase64: photoPayload },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setFaceRegistered(true);
+      setMarkMsg({ text: "✓ Face registered successfully!", type: "success" });
+      setStep("idle");
+      setPhotoPayload(null);
+    } catch (err) {
+      const status = err.response?.status;
+      const msg = err.response?.data?.message || err.message;
+      setMarkMsg({ text: msg || "Face registration failed.", type: "error" });
+      setStep("idle");
     } finally {
       setMarking(false);
     }
@@ -248,7 +299,32 @@ export default function StudentDashboard() {
                 {step === "camera" || step === "preview" ? "photo_camera" : "fingerprint"}
               </span>
             </div>
-            <h3 className="text-xl font-black uppercase tracking-tight mb-1">Check In</h3>
+            <h3 className="text-xl font-black uppercase tracking-tight mb-2">Check In</h3>
+            
+            {activeSessions.length > 0 ? (
+              <div className="flex flex-col gap-1.5 w-full mb-4">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary text-left pl-1">Select Active Class:</label>
+                <div className="relative">
+                  <select
+                    value={selectedSessionId}
+                    onChange={(e) => setSelectedSessionId(e.target.value)}
+                    className="w-full neo-input py-2.5 px-3 text-xs font-black uppercase tracking-widest bg-green-50 text-green-800 border-green-300 appearance-none cursor-pointer"
+                  >
+                    {activeSessions.map(s => (
+                      <option key={s._id} value={s._id}>
+                        🟢 {s.branch} - {s.subject} ({s.teacherId?.name || 'Teacher'})
+                      </option>
+                    ))}
+                  </select>
+                  <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-green-700 pointer-events-none">expand_more</span>
+                </div>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-container text-on-surface/50 neo-border-2 mb-4 w-full justify-center">
+                <span className="text-[10px] font-black uppercase tracking-widest">No Active Classes</span>
+              </div>
+            )}
+
             <p className="text-xs font-bold text-on-surface/50 uppercase tracking-widest mb-5">GPS + Selfie required</p>
 
             {/* Status Message */}
@@ -296,7 +372,7 @@ export default function StudentDashboard() {
                 <canvas ref={canvasRef} className="hidden" />
                 <button
                   id="capture-btn"
-                  onClick={capturePhoto}
+                  onClick={() => capturePhoto(false)}
                   className="py-3 font-black text-sm uppercase tracking-widest text-white flex justify-center items-center gap-2 neo-border bg-blue-600 hover:-translate-y-0.5 transition-all"
                 >
                   <span className="material-symbols-outlined">photo_camera</span>
@@ -327,7 +403,7 @@ export default function StudentDashboard() {
                 </div>
                 <canvas ref={canvasRef} className="hidden" />
                 <button
-                  onClick={retakePhoto}
+                  onClick={() => retakePhoto(false)}
                   disabled={marking}
                   className="py-2 text-xs font-bold text-primary uppercase bg-surface-container neo-border border-2"
                 >
@@ -346,22 +422,21 @@ export default function StudentDashboard() {
             )}
           </div>
 
+
           {/* Stats Card */}
           <div className="bg-white neo-border p-6 sm:p-8" style={{ boxShadow: "6px 6px 0px #6D28D9" }}>
             <div className="flex items-center gap-2 mb-6">
               <div className="w-2 h-6 bg-secondary"></div>
               <h3 className="font-black text-base uppercase tracking-wide">Attendance Overview</h3>
             </div>
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {[
-                { label: "Total", val: data.stats.total, bg: "bg-surface-container", color: "text-primary" },
-                { label: "Present", val: data.stats.present, bg: "bg-green-50", color: "text-green-700" },
-              ].map(s => (
-                <div key={s.label} className={`${s.bg} neo-border p-4 text-center neo-shadow-sm`}>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-on-surface/50 mb-1">{s.label}</p>
-                  <p className={`text-3xl font-black ${s.color}`}>{s.val}</p>
+            <div className="grid grid-cols-1 mb-6">
+              <div className="bg-green-50 neo-border p-4 text-center neo-shadow-sm flex flex-col items-center justify-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-on-surface/50 mb-1">Days Present</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-black text-green-700">{data.stats.present}</span>
+                  <span className="text-2xl font-black text-primary/40">/ {data.stats.total}</span>
                 </div>
-              ))}
+              </div>
             </div>
             <div className="h-52 w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
@@ -380,20 +455,20 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Subject-wise Breakdown Card */}
-          {data.subjectStats && data.subjectStats.length > 0 && (
+          {/* Branch-wise Breakdown Card */}
+          {data.branchStats && data.branchStats.length > 0 && (
             <div className="bg-white neo-border p-6 sm:p-8" style={{ boxShadow: "6px 6px 0px #38BDF8" }}>
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-2 h-6 bg-tertiary border-[2px] border-primary"></div>
-                <h3 className="font-black text-base uppercase tracking-wide">Subject-wise Stats</h3>
+                <h3 className="font-black text-base uppercase tracking-wide">Branch-wise Stats</h3>
               </div>
               <div className="space-y-3">
-                {data.subjectStats.map((ss) => {
+                {data.branchStats.map((ss) => {
                   const pctColor = ss.percentage >= 75 ? "text-green-700 bg-green-50" : ss.percentage >= 50 ? "text-yellow-700 bg-yellow-50" : "text-red-700 bg-red-50";
                   return (
-                    <div key={ss.subject} className="neo-border p-4 bg-surface-container hover:bg-primary-container transition-colors" style={{ boxShadow: "2px 2px 0px #6D28D9" }}>
+                    <div key={ss.branch} className="neo-border p-4 bg-surface-container hover:bg-primary-container transition-colors" style={{ boxShadow: "2px 2px 0px #6D28D9" }}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-black text-sm uppercase tracking-tight text-on-surface">{ss.subject}</span>
+                        <span className="font-black text-sm uppercase tracking-tight text-on-surface">{ss.branch}</span>
                         <span className={`px-2 py-0.5 neo-border-2 font-black text-xs uppercase tracking-widest ${pctColor}`}>{ss.percentage}%</span>
                       </div>
                       <div className="flex gap-4 text-[9px] font-black uppercase tracking-widest text-on-surface/50">
@@ -421,26 +496,26 @@ export default function StudentDashboard() {
               <h3 className="font-black text-base uppercase tracking-wide">Recent History</h3>
             </div>
 
-            {/* Subject Filter Tabs */}
-            {data.subjectStats && data.subjectStats.length > 0 && (
+            {/* Branch Filter Tabs */}
+            {data.branchStats && data.branchStats.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-5">
                 <button
-                  onClick={() => setSubjectTab("all")}
+                  onClick={() => setBranchTab("all")}
                   className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest neo-border-2 transition-colors ${
-                    subjectTab === "all" ? "bg-primary text-white" : "bg-surface-container text-on-surface/60 hover:bg-primary-container"
+                    branchTab === "all" ? "bg-primary text-white" : "bg-surface-container text-on-surface/60 hover:bg-primary-container"
                   }`}
                 >
                   All
                 </button>
-                {data.subjectStats.map(ss => (
+                {data.branchStats.map(ss => (
                   <button
-                    key={ss.subject}
-                    onClick={() => setSubjectTab(ss.subject)}
+                    key={ss.branch}
+                    onClick={() => setBranchTab(ss.branch)}
                     className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest neo-border-2 transition-colors ${
-                      subjectTab === ss.subject ? "bg-primary text-white" : "bg-surface-container text-on-surface/60 hover:bg-primary-container"
+                      branchTab === ss.branch ? "bg-primary text-white" : "bg-surface-container text-on-surface/60 hover:bg-primary-container"
                     }`}
                   >
-                    {ss.subject}
+                    {ss.branch}
                   </button>
                 ))}
               </div>
@@ -458,12 +533,12 @@ export default function StudentDashboard() {
               <div className="space-y-3">
                 {data.attendances
                   .filter(att => {
-                    if (subjectTab === "all") return true;
-                    const attSubject = att.subject || att.sessionId?.subject || '';
-                    return attSubject === subjectTab;
+                    if (branchTab === "all") return true;
+                    const attBranch = att.branch || att.sessionId?.branch || '';
+                    return attBranch === branchTab;
                   })
                   .map((att) => {
-                    const attSubject = att.subject || att.sessionId?.subject || '';
+                    const attBranch = att.branch || att.sessionId?.branch || '';
                     return (
                       <div key={att._id} className="flex items-center justify-between p-4 neo-border bg-surface-container hover:bg-primary-container transition-colors" style={{ boxShadow: "2px 2px 0px #6D28D9" }}>
                         <div className="flex items-center gap-3">
@@ -474,8 +549,8 @@ export default function StudentDashboard() {
                             <p className="font-black text-sm text-on-surface">{att.date}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               <p className="text-[10px] font-mono font-bold text-on-surface/40">{new Date(att.timestamp).toLocaleTimeString()}</p>
-                              {attSubject && (
-                                <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 font-black text-[8px] uppercase tracking-widest neo-border-2">{attSubject}</span>
+                              {attBranch && (
+                                <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 font-black text-[8px] uppercase tracking-widest neo-border-2">{attBranch}</span>
                               )}
                             </div>
                           </div>

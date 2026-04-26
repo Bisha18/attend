@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function TeacherStart() {
-  const [formData, setFormData] = useState({ latitude: "", longitude: "", radius: 50, subject: "" });
+  const [formData, setFormData] = useState({ latitude: "", longitude: "", radius: 50, branch: "", subject: "" });
   const [loadingLoc, setLoadingLoc] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [error, setError] = useState("");
   const [sessionInfo, setSessionInfo] = useState(null);
+  const [endingSession, setEndingSession] = useState(false);
 
   useEffect(() => {
     const checkActive = async () => {
@@ -37,10 +38,22 @@ export default function TeacherStart() {
       const token = localStorage.getItem("token");
       const { data } = await axios.post("/api/session/start", formData, { headers: { Authorization: `Bearer ${token}` } });
       setSessionInfo(data);
-      setFormData({ latitude: "", longitude: "", radius: 50, subject: "" });
+      setFormData({ latitude: "", longitude: "", radius: 50, branch: "", subject: "" });
       alert("Session Started Successfully!");
     } catch (err) { setError(err.response?.data?.message || "Server Error"); }
     finally { setLoadingSubmit(false); }
+  };
+
+  const handleEndSession = async () => {
+    if (!confirm("Are you sure you want to end the current session?")) return;
+    setEndingSession(true); setError("");
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post("/api/session/end", {}, { headers: { Authorization: `Bearer ${token}` } });
+      setSessionInfo(null);
+      alert("Session ended successfully!");
+    } catch (err) { setError(err.response?.data?.message || "Failed to end session"); }
+    finally { setEndingSession(false); }
   };
 
   return (
@@ -55,10 +68,23 @@ export default function TeacherStart() {
           </div>
           <p className="text-sm font-bold text-on-surface/50 uppercase tracking-widest ml-6">Define geofence parameters to initiate class verification</p>
         </div>
-        <div className={`flex items-center gap-2 neo-border px-3 py-2 text-xs font-black uppercase tracking-widest w-max ${sessionInfo ? "bg-green-50 text-green-700" : "bg-surface-container text-on-surface/50"}`}
-          style={{ boxShadow: sessionInfo ? "2px 2px 0px #6D28D9" : "2px 2px 0px #38BDF8" }}>
-          <span className={`w-2 h-2 rounded-full ${sessionInfo ? "bg-green-500 animate-pulse" : "bg-on-surface/20"}`}></span>
-          {sessionInfo ? `Active — ${sessionInfo.subject || "No Subject"}` : "Session Inactive"}
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-2 neo-border px-3 py-2 text-xs font-black uppercase tracking-widest w-max ${sessionInfo ? "bg-green-50 text-green-700" : "bg-surface-container text-on-surface/50"}`}
+            style={{ boxShadow: sessionInfo ? "2px 2px 0px #6D28D9" : "2px 2px 0px #38BDF8" }}>
+            <span className={`w-2 h-2 rounded-full ${sessionInfo ? "bg-green-500 animate-pulse" : "bg-on-surface/20"}`}></span>
+            {sessionInfo ? `Active — ${sessionInfo.branch || "No Branch"} (${sessionInfo.subject || "No Subject"})` : "Session Inactive"}
+          </div>
+          {sessionInfo && (
+            <button
+              onClick={handleEndSession}
+              disabled={endingSession}
+              className="flex items-center gap-1.5 neo-border px-3 py-2 text-xs font-black uppercase tracking-widest bg-red-50 text-red-700 hover:bg-red-600 hover:text-white transition-all disabled:opacity-50"
+              style={{ boxShadow: "2px 2px 0px #DC2626" }}
+            >
+              <span className="material-symbols-outlined text-sm">stop_circle</span>
+              {endingSession ? "Ending..." : "End Session"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -101,15 +127,27 @@ export default function TeacherStart() {
               </div>
 
               <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-primary block">Branch</label>
+                <input
+                  className="neo-input"
+                  placeholder="e.g. Computer Science, Mechanical"
+                  type="text" required
+                  value={formData.branch}
+                  onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                />
+                <p className="text-[9px] text-on-surface/40 font-bold uppercase tracking-widest">Which branch is this session for?</p>
+              </div>
+
+              <div className="space-y-1.5">
                 <label className="text-[9px] font-black uppercase tracking-[0.2em] text-primary block">Subject</label>
                 <input
                   className="neo-input"
-                  placeholder="e.g. Mathematics, Physics"
+                  placeholder="e.g. Data Structures, Operating Systems"
                   type="text" required
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                 />
-                <p className="text-[9px] text-on-surface/40 font-bold uppercase tracking-widest">Which class is this session for?</p>
+                <p className="text-[9px] text-on-surface/40 font-bold uppercase tracking-widest">What subject is being taught?</p>
               </div>
 
               <div className="space-y-1.5">

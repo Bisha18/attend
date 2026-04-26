@@ -19,7 +19,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     let dateParam = searchParams.get('date');
     const sessionId = searchParams.get('sessionId');
-    const subjectParam = searchParams.get('subject');
+    const branchParam = searchParams.get('branch');
     
     // Default to today if date not provided
     if (!dateParam) {
@@ -27,14 +27,18 @@ export async function GET(request) {
     }
     
     let sessionQuery = { teacherId: user.userId };
-    if (subjectParam) {
-      sessionQuery.subject = subjectParam;
+    if (branchParam) {
+      sessionQuery.branch = branchParam;
     }
-    const teacherSessions = await Session.find(sessionQuery).select('_id subject').lean();
+    const teacherSessions = await Session.find(sessionQuery).select('_id branch subject').lean();
     const teacherSessionIds = teacherSessions.map((s) => s._id.toString());
-    // Build a map from sessionId to subject for quick lookup
+    // Build a map from sessionId to branch/subject for quick lookup
+    const sessionBranchMap = {};
     const sessionSubjectMap = {};
-    teacherSessions.forEach(s => { sessionSubjectMap[s._id.toString()] = s.subject || ''; });
+    teacherSessions.forEach(s => { 
+      sessionBranchMap[s._id.toString()] = s.branch || ''; 
+      sessionSubjectMap[s._id.toString()] = s.subject || ''; 
+    });
 
     let query = { date: dateParam, sessionId: { $in: teacherSessionIds } };
     if (sessionId) {
@@ -83,10 +87,13 @@ export async function GET(request) {
         studentId: student,
         timestamp: att.timestamp,
         date: att.date,
+        branch: att.branch || sessionBranchMap[att.sessionId?.toString()] || '',
         subject: att.subject || sessionSubjectMap[att.sessionId?.toString()] || '',
         mapStatus: 'Verified',
         rfidStatus: hasRfid ? 'Scanned' : 'Not Scanned',
         selfieUrl: att.selfieUrl || null,
+        faceVerified: att.faceVerified ?? null,
+        faceConfidence: att.faceConfidence ?? null,
         finalStatus
       });
     }
