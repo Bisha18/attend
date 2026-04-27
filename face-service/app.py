@@ -1,5 +1,9 @@
 
 import os
+# Suppress TensorFlow and CUDA warnings
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
 import base64
 import logging
 import threading
@@ -66,7 +70,7 @@ def startup_event():
             from deepface import DeepFace as _DF
             DeepFace = _DF
             dummy = np.zeros((224, 224, 3), dtype=np.uint8)
-            DeepFace.represent(dummy, model_name=MODEL_NAME, detector_backend="opencv", enforce_detection=False)
+            DeepFace.represent(dummy, model_name=MODEL_NAME, detector_backend="ssd", enforce_detection=False)
             log.info("✅ DeepFace model loaded and pre-warmed.")
         except Exception as e:
             log.warning(f"Pre-warm failed: {e}")
@@ -118,7 +122,7 @@ def get_embedding(img_array: np.ndarray) -> list:
         results = DeepFace.represent(
             img_path=img_array,
             model_name=MODEL_NAME,
-            detector_backend="opencv",
+            detector_backend="ssd",
             enforce_detection=True,
         )
     except ValueError as e:
