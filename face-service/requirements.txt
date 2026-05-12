@@ -7,5 +7,6 @@ python-multipart
 deepface
 tensorflow-cpu
 tf-keras
+numpy
 httpx
 Pillow

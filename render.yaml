@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: geoattend-face-service
+    runtime: docker
+    dockerfilePath: ./face-service/Dockerfile
+    dockerContext: ./face-service
+    region: singapore
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: DB_NAME
+        value: test
+      - key: THRESHOLD
+        value: "0.55"
+      - key: SELF_URL
+        sync: false
+      - key: KEEP_ALIVE_INTERVAL
+        value: "840"
+      - key: ADMIN_SECRET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
