@@ -1,9 +1,10 @@
 services:
   - type: web
     name: geoattend-face-service
-    runtime: docker
-    dockerfilePath: ./face-service/Dockerfile
-    dockerContext: ./face-service
+    runtime: python
+    rootDir: face-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
     region: singapore
     plan: free
     healthCheckPath: /health
@@ -21,4 +22,6 @@ services:
       - key: ADMIN_SECRET
         sync: false
       - key: ALLOWED_ORIGINS
-        sync: false
+        value: "*"
+      - key: PYTHON_VERSION
+        value: "3.11.6"
