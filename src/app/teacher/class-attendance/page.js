@@ -68,7 +68,7 @@ export default function ClassAttendance() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b-[3px] border-primary bg-primary/5">
-                  {["Scan Timestamp", "Student Details", "Academic Info", "Entry Status"].map(h => (
+                  {["Scan Timestamp", "Student Details", "Entry Status"].map(h => (
                     <th key={h} className="py-3 px-4 text-[9px] font-black uppercase tracking-[0.2em] text-primary">{h}</th>
                   ))}
                 </tr>
@@ -85,17 +85,11 @@ export default function ClassAttendance() {
                       {att.studentId && <div className="text-[10px] font-bold text-on-surface/40 mt-1">{att.studentId.email}</div>}
                     </td>
                     <td className="py-4 px-4">
-                      {att.studentId?.branch ? (
-                         <div className="text-xs font-black uppercase tracking-wide text-on-surface/70 mb-0.5">{att.studentId.branch}</div>
-                      ) : <div className="text-xs font-bold text-on-surface/30 uppercase">Unregistered</div>}
-                      {att.studentId?.semester && (
-                         <div className="text-[9px] font-bold uppercase tracking-widest text-on-surface/40">Sem {att.studentId.semester}</div>
-                      )}
-                    </td>
-                    <td className="py-4 px-4">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 neo-border-2 text-blue-700">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                        <span className="text-[9px] font-black uppercase tracking-widest">{att.finalStatus || 'Absent'}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest">
+                          {att.studentId ? 'Present' : 'Absent'}
+                        </span>
                       </span>
                     </td>
                   </tr>
