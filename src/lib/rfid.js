@@ -1,6 +1,6 @@
 export async function fetchRfidData(dateString) {
   try {
-    const url = 'https://opensheet.elk.sh/1DxTHbJHPMwyzaY9tbUrGulBr_1EhDB-Zm6omlbwunec/Sheet1';
+    const url = 'https://opensheet.elk.sh/1qnY7xhnoO-5GuaUd3-B6mIOWwWQQXuQxOA2NGVg5bb8/Sheet1';
     
     // Using fetch
     const response = await fetch(url, { cache: 'no-store' });
