@@ -42,9 +42,7 @@ export async function GET(request) {
         const hasRfid = student?.rfidUid ? rfidUidsThisDate.includes(student.rfidUid) : false;
         const hasSelfie = !!att.selfieUrl;
         
-        let finalStatus = 'Invalid';
-        if (hasSelfie) finalStatus = 'Present'; 
-        else if (hasRfid && !hasSelfie) finalStatus = 'Absent';
+        let finalStatus = hasRfid ? 'Present' : 'Absent'; // RFID mandatory for presence
         
         const branch = att.branch || att.sessionId?.branch || '';
         
@@ -77,7 +75,7 @@ export async function GET(request) {
             subject: '',
             mapStatus: 'Not Verified',
             rfidStatus: 'Scanned',
-            finalStatus: 'Absent'
+            finalStatus: 'Present'
           });
         }
       }
@@ -146,9 +144,7 @@ export async function GET(request) {
       const hasRfid = student.rfidUid ? rfidUidsThisDate.includes(student.rfidUid) : false;
       const hasSelfie = !!att.selfieUrl;
       
-      let finalStatus = 'Invalid';
-      if (hasSelfie) finalStatus = 'Present'; // Map verified + Selfie = Present (RFID is optional bonus)
-      else if (hasRfid && !hasSelfie) finalStatus = 'Absent';  // RFID only, no selfie proof
+      let finalStatus = hasRfid ? 'Present' : 'Absent';
       
       mergedData.push({
         _id: att._id,
@@ -176,7 +172,7 @@ export async function GET(request) {
           date: dateParam,
           mapStatus: 'Not Verified',
           rfidStatus: 'Scanned',
-          finalStatus: 'Absent'
+          finalStatus: 'Present'
         });
       }
     }

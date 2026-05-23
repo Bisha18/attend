@@ -95,7 +95,7 @@ export default function ClassAttendance() {
                     <td className="py-4 px-4">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 neo-border-2 text-blue-700">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                        <span className="text-[9px] font-black uppercase tracking-widest">{att.status || 'Physical Entry'}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest">{att.finalStatus || 'Absent'}</span>
                       </span>
                     </td>
                   </tr>
