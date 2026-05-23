@@ -10,10 +10,10 @@ import { fetchRfidData } from '@/lib/rfid';
 export async function GET(request) {
   try {
     const user = getUser(request);
-    if (!user || user.role !== 'TEACHER') {
+    console.log('Attendance API - user:', user);
+    if (!user) {
       return unauthorized();
     }
-
     await dbConnect();
     
     const { searchParams } = new URL(request.url);
@@ -24,6 +24,74 @@ export async function GET(request) {
     // Default to today if date not provided
     if (!dateParam) {
       dateParam = new Date().toISOString().split('T')[0];
+    }
+
+    if (user.role === 'STUDENT') {
+      let query = { studentId: user.userId, date: dateParam };
+      
+      const studentAttendances = await Attendance.find(query)
+        .populate('sessionId', 'branch subject')
+        .populate('studentId', 'name email rfidUid')
+        .sort({ timestamp: -1 })
+        .lean();
+        
+      const rfidUidsThisDate = await fetchRfidData(dateParam);
+        
+      let formattedAttendances = studentAttendances.map(att => {
+        const student = att.studentId;
+        const hasRfid = student?.rfidUid ? rfidUidsThisDate.includes(student.rfidUid) : false;
+        const hasSelfie = !!att.selfieUrl;
+        
+        let finalStatus = 'Invalid';
+        if (hasSelfie) finalStatus = 'Present'; 
+        else if (hasRfid && !hasSelfie) finalStatus = 'Absent';
+        
+        const branch = att.branch || att.sessionId?.branch || '';
+        
+        return {
+          _id: att._id,
+          studentId: student,
+          timestamp: att.timestamp,
+          date: att.date,
+          branch,
+          subject: att.subject || att.sessionId?.subject || '',
+          mapStatus: 'Verified',
+          rfidStatus: hasRfid ? 'Scanned' : 'Not Scanned',
+          selfieUrl: att.selfieUrl || null,
+          faceVerified: att.faceVerified ?? null,
+          faceConfidence: att.faceConfidence ?? null,
+          finalStatus
+        };
+      });
+      
+      if (studentAttendances.length === 0) {
+        const rfidStudent = await User.findById(user.userId).lean();
+        const hasRfidScanned = rfidStudent?.rfidUid ? rfidUidsThisDate.includes(rfidStudent.rfidUid) : false;
+        if (hasRfidScanned) {
+          formattedAttendances.push({
+            _id: `rfid_only_${rfidStudent._id}`,
+            studentId: rfidStudent,
+            timestamp: new Date().toISOString(),
+            date: dateParam,
+            branch: rfidStudent.branch || '',
+            subject: '',
+            mapStatus: 'Not Verified',
+            rfidStatus: 'Scanned',
+            finalStatus: 'Absent'
+          });
+        }
+      }
+      
+      if (branchParam) {
+        formattedAttendances = formattedAttendances.filter(a => a.branch === branchParam);
+      }
+      
+      return NextResponse.json(formattedAttendances, { status: 200 });
+    }
+
+    if (user.role !== 'TEACHER') {
+      console.warn('Attendance API - user role is not TEACHER:', user.role);
+      return NextResponse.json({ message: `Not authorized. Role is ${user.role}` }, { status: 401 });
     }
     
     let sessionQuery = { teacherId: user.userId };

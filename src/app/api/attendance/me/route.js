@@ -24,8 +24,8 @@ export async function GET(request) {
     const absentCount = totalSessions - presentCount;
 
     // Calculate branch-wise stats
-    // Get all unique branches from sessions
-    const allSessions = await Session.find({}).select('branch').lean();
+    // Get all unique branches and subjects from sessions
+    const allSessions = await Session.find({}).select('branch subject').lean();
     const branchSessionCounts = {};
     allSessions.forEach(s => {
       const b = s.branch || 'Unknown';
@@ -54,6 +54,42 @@ export async function GET(request) {
       };
     });
 
+    // Calculate subject-wise stats
+    const subjectSessionCounts = {};
+    allSessions.forEach(s => {
+      const sub = s.subject || 'Unknown';
+      subjectSessionCounts[sub] = (subjectSessionCounts[sub] || 0) + 1;
+    });
+
+    const subjectPresentCounts = {};
+    attendances.forEach(a => {
+      const sub = a.sessionId?.subject || 'Unknown';
+      if (a.status === 'PRESENT') {
+        subjectPresentCounts[sub] = (subjectPresentCounts[sub] || 0) + 1;
+      }
+    });
+
+    const subjects = [...new Set([...Object.keys(subjectSessionCounts), ...Object.keys(subjectPresentCounts)])];
+    const subjectStats = subjects.map(sub => {
+      const total = subjectSessionCounts[sub] || 0;
+      const present = subjectPresentCounts[sub] || 0;
+      const absent = Math.max(0, total - present);
+      return {
+        subject: sub,
+        total,
+        present,
+        absent,
+        percentage: total > 0 ? Math.round((present / total) * 100) : 0
+      };
+    });
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const monthSessionsCount = await Session.countDocuments({ createdAt: { $gte: thirtyDaysAgo } });
+    const monthPresentCount = attendances.filter(a => a.status === 'PRESENT' && new Date(a.timestamp) >= thirtyDaysAgo).length;
+    const monthAbsentCount = Math.max(0, monthSessionsCount - monthPresentCount);
+
     return NextResponse.json({
         attendances,
         stats: {
@@ -62,7 +98,14 @@ export async function GET(request) {
             absent: absentCount > 0 ? absentCount : 0,
             percentage: totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 0
         },
-        branchStats
+        monthStats: {
+            total: monthSessionsCount,
+            present: monthPresentCount,
+            absent: monthAbsentCount,
+            percentage: monthSessionsCount > 0 ? Math.round((monthPresentCount / monthSessionsCount) * 100) : 0
+        },
+        branchStats,
+        subjectStats
     }, { status: 200 });
   } catch (error) {
     console.error('Get My Attendance Error:', error);

@@ -22,6 +22,13 @@ export async function POST(request) {
 
     const isStudent = role === 'STUDENT' || !role;
 
+    if (isStudent && uid) {
+      const uidExists = await User.findOne({ rfidUid: uid });
+      if (uidExists) {
+        return NextResponse.json({ message: 'RFID UID is already registered to another user' }, { status: 400 });
+      }
+    }
+
     if (isStudent && !selfieBase64) {
       return NextResponse.json({ message: 'Face registration selfie is required for students' }, { status: 400 });
     }

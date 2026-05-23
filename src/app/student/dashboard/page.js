@@ -429,12 +429,19 @@ export default function StudentDashboard() {
               <div className="w-2 h-6 bg-secondary"></div>
               <h3 className="font-black text-base uppercase tracking-wide">Attendance Overview</h3>
             </div>
-            <div className="grid grid-cols-1 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-green-50 neo-border p-4 text-center neo-shadow-sm flex flex-col items-center justify-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-on-surface/50 mb-1">Days Present</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-on-surface/50 mb-1">Days Present (All)</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-black text-green-700">{data.stats.present}</span>
-                  <span className="text-2xl font-black text-primary/40">/ {data.stats.total}</span>
+                  <span className="text-4xl sm:text-5xl font-black text-green-700">{data.stats.present}</span>
+                  <span className="text-xl sm:text-2xl font-black text-primary/40">/ {data.stats.total}</span>
+                </div>
+              </div>
+              <div className="bg-blue-50 neo-border p-4 text-center neo-shadow-sm flex flex-col items-center justify-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-on-surface/50 mb-1">Last 30 Days</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl sm:text-5xl font-black text-blue-700">{data.monthStats?.present || 0}</span>
+                  <span className="text-xl sm:text-2xl font-black text-primary/40">/ {data.monthStats?.total || 0}</span>
                 </div>
               </div>
             </div>

@@ -23,6 +23,8 @@ export default function StudentLayout({ children }) {
 
   const navLinks = [
     { name: "Dashboard", href: "/student/dashboard", icon: "dashboard" },
+    { name: "Analytics", href: "/student/analytics", icon: "analytics" },
+    { name: "Class Stats", href: "/student/classes", icon: "category" },
   ];
 
   return (
@@ -34,9 +36,7 @@ export default function StudentLayout({ children }) {
         {/* Brand */}
         <div className="flex-shrink-0 px-6 py-5 border-b-[3px] border-primary bg-primary" style={{ boxShadow: "0 3px 0 #38BDF8" }}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white flex items-center justify-center neo-border-2 neo-shadow-sm">
-              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
-            </div>
+            <img src="/logo.png" alt="Attendsure Logo" className="w-10 h-10 object-contain bg-white rounded-full neo-border-2 neo-shadow-sm" style={{ border:"2px solid #000" }} />
             <div>
               <h1 className="text-lg font-black text-white uppercase tracking-tighter leading-none">Attendsure</h1>
               <span className="text-[9px] font-black text-secondary uppercase tracking-widest">Student OS // v1.0</span>

@@ -111,9 +111,7 @@ export default function LoginRegister() {
 
       {/* Brand */}
       <div className="flex flex-col items-center gap-3 text-center z-10 max-w-md w-full mt-10 sm:mt-0">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary neo-border neo-shadow flex items-center justify-center mb-1">
-          <span className="material-symbols-outlined text-white text-4xl sm:text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
-        </div>
+        <img src="/logo.png" alt="Attendsure Logo" className="w-16 h-16 sm:w-20 sm:h-20 object-contain bg-white rounded-full neo-shadow mb-1" style={{ border:"3px solid #000" }} />
         <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-on-surface uppercase tracking-tighter leading-none"
           style={{ textShadow: "3px 3px 0px #6D28D9, 6px 6px 0px #38BDF8" }}>
           Attend<br />sure

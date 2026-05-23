@@ -1,8 +1,14 @@
+# Hugging Face Spaces — Docker SDK
+# HF Spaces always routes traffic to port 7860 internally.
+
 FROM python:3.11-slim
+
+# HF Spaces metadata
+LABEL maintainer="GeoAttend"
 
 WORKDIR /app
 
-# System dependencies for OpenCV (opencv detector backend)
+# System dependencies for OpenCV detector backend
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
@@ -15,10 +21,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application
 COPY app.py .
 
-# Render assigns PORT dynamically
-ENV PORT=8001
+# Hugging Face Spaces always uses port 7860
+ENV PORT=7860
 
-EXPOSE ${PORT}
+EXPOSE 7860
 
-# Start uvicorn — reads PORT from environment
-CMD uvicorn app:app --host 0.0.0.0 --port ${PORT}
+# Run uvicorn on the fixed HF port
+CMD uvicorn app:app --host 0.0.0.0 --port 7860

@@ -512,9 +512,7 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════════════════ */}
       <nav ref={navRef} className="w-full flex justify-between items-center px-4 sm:px-8 lg:px-12 py-4 border-b-[3px] border-primary bg-white/90 backdrop-blur-sm sticky top-0 z-50" style={{ boxShadow:"0 3px 0 #38BDF8" }}>
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-9 h-9 sm:w-11 sm:h-11 bg-primary flex items-center justify-center neo-shadow-sm cursor-pointer" style={{ border:"3px solid #000", animation:"logo-shake 3s ease-in-out infinite" }}>
-            <span className="material-symbols-outlined text-white text-xl sm:text-2xl" style={{ fontVariationSettings:"'FILL' 1" }}>location_on</span>
-          </div>
+          <img src="/logo.png" alt="Attendsure Logo" className="w-9 h-9 sm:w-11 sm:h-11 object-contain bg-white rounded-full" style={{ border:"3px solid #000", animation:"logo-shake 3s ease-in-out infinite" }} />
           <span className="text-xl sm:text-2xl lg:text-3xl font-black uppercase tracking-tighter" style={{ textShadow:"2px 2px 0px #6D28D9, 4px 4px 0px #38BDF8" }}>Attendsure</span>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
