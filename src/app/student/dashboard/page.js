@@ -547,14 +547,16 @@ export default function StudentDashboard() {
                   .map((att) => {
                     const attBranch = att.branch || att.sessionId?.branch || '';
                     return (
-                      <div key={att._id} className="flex items-center justify-between p-4 neo-border bg-surface-container hover:bg-primary-container transition-colors" style={{ boxShadow: "2px 2px 0px #6D28D9" }}>
+                      <div key={att._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 neo-border bg-surface-container hover:bg-primary-container transition-colors gap-3" style={{ boxShadow: "2px 2px 0px #6D28D9" }}>
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-green-100 neo-border-2 flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-outlined text-green-700 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                          <div className={`w-9 h-9 neo-border-2 flex items-center justify-center flex-shrink-0 ${att.finalStatus === 'Present' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
+                              {att.finalStatus === 'Present' ? 'check_circle' : 'cancel'}
+                            </span>
                           </div>
                           <div>
                             <p className="font-black text-sm text-on-surface">{att.date}</p>
-                            <div className="flex items-center gap-2 mt-0.5">
+                            <div className="flex items-center flex-wrap gap-2 mt-0.5">
                               <p className="text-[10px] font-mono font-bold text-on-surface/40">{new Date(att.timestamp).toLocaleTimeString()}</p>
                               {attBranch && (
                                 <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 font-black text-[8px] uppercase tracking-widest neo-border-2">{attBranch}</span>
@@ -562,9 +564,15 @@ export default function StudentDashboard() {
                             </div>
                           </div>
                         </div>
-                        <span className="px-3 py-1 bg-green-100 text-green-700 font-black text-[9px] uppercase tracking-widest neo-border-2">
-                          {att.status}
-                        </span>
+                        <div className="flex items-center gap-2 self-start sm:self-auto ml-12 sm:ml-0">
+                          <span className={`px-2 py-1 font-black text-[8px] uppercase tracking-widest neo-border-2 flex items-center gap-1 ${att.rfidStatus === 'Scanned' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '10px' }}>contactless</span>
+                            {att.rfidStatus === 'Scanned' ? 'RFID Scanned' : 'No RFID'}
+                          </span>
+                          <span className={`px-3 py-1 font-black text-[9px] uppercase tracking-widest neo-border-2 ${att.finalStatus === 'Present' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            {att.finalStatus || 'Absent'}
+                          </span>
+                        </div>
                       </div>
                     );
                   })}
