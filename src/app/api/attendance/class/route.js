@@ -49,16 +49,23 @@ export async function GET(request) {
       userDict[u.rfidUid] = u;
     });
 
-    // Map each LOG to a unified response, showing the exact time and sequence
-    const classAttendance = logsThisDate.map((log, index) => ({
-      _id: `rfid_log_${log.UID}_${index}`,
-      studentId: userDict[log.UID] || null, // Can be null if unregistered UID
-      rawUid: log.UID,
-      rawName: log.NAME,
-      date: log.DATE,
-      time: log.TIME,
-      status: log.STATUS,
-    }));
+    // Map each LOG to a unified response
+    // RFID scan = Present. If UID is not registered in system = Unregistered.
+    const classAttendance = logsThisDate.map((log, index) => {
+      const student = userDict[log.UID] || null;
+      const finalStatus = student ? 'Present' : 'Unregistered';
+      
+      return {
+        _id: `rfid_log_${log.UID}_${index}`,
+        studentId: student,
+        rawUid: log.UID,
+        rawName: log.NAME,
+        date: log.DATE,
+        time: log.TIME,
+        status: log.STATUS,
+        finalStatus
+      };
+    });
 
     return NextResponse.json(classAttendance.reverse(), { status: 200 }); // Reverse so latest is first
   } catch (error) {

@@ -85,10 +85,22 @@ export default function ClassAttendance() {
                       {att.studentId && <div className="text-[10px] font-bold text-on-surface/40 mt-1">{att.studentId.email}</div>}
                     </td>
                     <td className="py-4 px-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 neo-border-2 text-blue-700">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 neo-border-2 ${
+                        att.finalStatus === 'Present'
+                          ? 'bg-green-50 text-green-700'
+                          : att.finalStatus === 'Unregistered'
+                          ? 'bg-yellow-50 text-yellow-700'
+                          : 'bg-red-50 text-red-700'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          att.finalStatus === 'Present'
+                            ? 'bg-green-500'
+                            : att.finalStatus === 'Unregistered'
+                            ? 'bg-yellow-500'
+                            : 'bg-red-500'
+                        }`}></span>
                         <span className="text-[9px] font-black uppercase tracking-widest">
-                          {att.studentId ? 'Present' : 'Absent'}
+                          {att.finalStatus || 'Absent'}
                         </span>
                       </span>
                     </td>

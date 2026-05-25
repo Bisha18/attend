@@ -75,7 +75,7 @@ export async function GET(request) {
             subject: '',
             mapStatus: 'Not Verified',
             rfidStatus: 'Scanned',
-            finalStatus: 'Present'
+            finalStatus: 'Absent'
           });
         }
       }
@@ -172,7 +172,7 @@ export async function GET(request) {
           date: dateParam,
           mapStatus: 'Not Verified',
           rfidStatus: 'Scanned',
-          finalStatus: 'Present'
+          finalStatus: 'Absent'
         });
       }
     }

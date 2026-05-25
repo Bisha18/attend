@@ -16,11 +16,38 @@ export async function GET(request) {
     // Get my attendances
     const attendances = await Attendance.find({ studentId: user.userId })
       .populate('sessionId')
-      .sort({ timestamp: -1 });
+      .sort({ timestamp: -1 })
+      .lean();
       
+    // Fetch RFID data for the student
+    const User = require('@/models/User').default;
+    const { fetchAllRfidLogs } = require('@/lib/rfid');
+    const studentUser = await User.findById(user.userId).lean();
+    const rfidLogs = await fetchAllRfidLogs();
+    
+    // Map of dates where student scanned RFID
+    const studentRfidDates = new Set(
+      rfidLogs
+        .filter(log => log.UID === studentUser?.rfidUid)
+        .map(log => log.DATE) // Assuming DATE format is DD/MM/YYYY
+    );
+
+    const formattedAttendances = attendances.map(att => {
+      // Date in attendance is YYYY-MM-DD
+      const [year, month, day] = att.date.split('-');
+      const formattedDate = `${day}/${month}/${year}`;
+      const hasRfid = studentRfidDates.has(formattedDate);
+      
+      return {
+        ...att,
+        rfidStatus: hasRfid ? 'Scanned' : 'Not Scanned',
+        finalStatus: hasRfid ? 'Present' : 'Absent'
+      };
+    });
+
     // Calculate overall stats
     const totalSessions = await Session.countDocuments();
-    const presentCount = attendances.filter(a => a.status === 'PRESENT').length;
+    const presentCount = formattedAttendances.filter(a => a.finalStatus === 'Present').length;
     const absentCount = totalSessions - presentCount;
 
     // Calculate branch-wise stats
@@ -33,9 +60,9 @@ export async function GET(request) {
     });
 
     const branchPresentCounts = {};
-    attendances.forEach(a => {
+    formattedAttendances.forEach(a => {
       const b = a.branch || a.sessionId?.branch || 'Unknown';
-      if (a.status === 'PRESENT') {
+      if (a.finalStatus === 'Present') {
         branchPresentCounts[b] = (branchPresentCounts[b] || 0) + 1;
       }
     });
@@ -62,9 +89,9 @@ export async function GET(request) {
     });
 
     const subjectPresentCounts = {};
-    attendances.forEach(a => {
+    formattedAttendances.forEach(a => {
       const sub = a.sessionId?.subject || 'Unknown';
-      if (a.status === 'PRESENT') {
+      if (a.finalStatus === 'Present') {
         subjectPresentCounts[sub] = (subjectPresentCounts[sub] || 0) + 1;
       }
     });
@@ -87,11 +114,11 @@ export async function GET(request) {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const monthSessionsCount = await Session.countDocuments({ createdAt: { $gte: thirtyDaysAgo } });
-    const monthPresentCount = attendances.filter(a => a.status === 'PRESENT' && new Date(a.timestamp) >= thirtyDaysAgo).length;
+    const monthPresentCount = formattedAttendances.filter(a => a.finalStatus === 'Present' && new Date(a.timestamp) >= thirtyDaysAgo).length;
     const monthAbsentCount = Math.max(0, monthSessionsCount - monthPresentCount);
 
     return NextResponse.json({
-        attendances,
+        attendances: formattedAttendances,
         stats: {
             total: totalSessions,
             present: presentCount,
