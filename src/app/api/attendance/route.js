@@ -40,9 +40,10 @@ export async function GET(request) {
       let formattedAttendances = studentAttendances.map(att => {
         const student = att.studentId;
         const hasRfid = student?.rfidUid ? rfidUidsThisDate.includes(student.rfidUid) : false;
-        const hasSelfie = !!att.selfieUrl;
         
-        let finalStatus = hasRfid ? 'Present' : 'Absent'; // RFID mandatory for presence
+        // Student submitted geo + selfie attendance = Present
+        // RFID is shown as extra info but doesn't block Present status
+        const finalStatus = 'Present';
         
         const branch = att.branch || att.sessionId?.branch || '';
         
@@ -118,10 +119,24 @@ export async function GET(request) {
     const mapAttendances = await Attendance.find(query)
       .populate('studentId', 'name email rfidUid')
       .sort({ timestamp: -1 })
-      .lean(); // Use lean() to allow adding properties
+      .lean();
 
-    // 2. Get RFID scans for the date
-    const rfidUidsThisDate = await fetchRfidData(dateParam);
+    // 2. Get full RFID logs for the date (includes UID + NAME)
+    const { fetchAllRfidLogs } = await import('@/lib/rfid');
+    const rfidLogs = await fetchAllRfidLogs(dateParam);
+    const rfidUidsThisDate = rfidLogs.map(l => l.UID);
+    const rfidNamesThisDate = rfidLogs.map(l => (l.NAME || '').toLowerCase().trim());
+
+    // Helper: check if a student has RFID match (by UID or by first-name fallback)
+    const studentHasRfid = (student) => {
+      if (!student) return false;
+      // Primary: UID match in DB
+      if (student.rfidUid && rfidUidsThisDate.includes(student.rfidUid)) return true;
+      // Fallback: match first name against RFID log name (handles unlinked UIDs)
+      const firstName = (student.name || '').split(' ')[0].toLowerCase().trim();
+      if (firstName && rfidNamesThisDate.some(n => n.includes(firstName) || firstName.includes(n))) return true;
+      return false;
+    };
     
     // 3. Find all students that scanned RFID today but didn't mark map attendance
     const rfidOnlyUsers = await User.find({
@@ -141,10 +156,10 @@ export async function GET(request) {
       const student = att.studentId;
       if (!student) continue;
 
-      const hasRfid = student.rfidUid ? rfidUidsThisDate.includes(student.rfidUid) : false;
-      const hasSelfie = !!att.selfieUrl;
+      const hasRfid = studentHasRfid(student);
       
-      let finalStatus = hasRfid ? 'Present' : 'Absent';
+      // 3-way verification: geo (Attendance record exists) + selfie + RFID
+      const finalStatus = hasRfid ? 'Present' : 'Absent';
       
       mergedData.push({
         _id: att._id,
