@@ -50,10 +50,9 @@ export async function GET(request) {
     });
 
     // Map each LOG to a unified response
-    // RFID scan = Present. If UID is not registered in system = Unregistered.
+    // ANY RFID scan = Present. If linked to a student account, show their details.
     const classAttendance = logsThisDate.map((log, index) => {
       const student = userDict[log.UID] || null;
-      const finalStatus = student ? 'Present' : 'Unregistered';
       
       return {
         _id: `rfid_log_${log.UID}_${index}`,
@@ -63,7 +62,7 @@ export async function GET(request) {
         date: log.DATE,
         time: log.TIME,
         status: log.STATUS,
-        finalStatus
+        finalStatus: 'Present'
       };
     });
 
